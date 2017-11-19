@@ -1,0 +1,9 @@
+{
+  "generator-node": {
+    "promptValues": {
+      "authorName": "Suhail Abood",
+      "authorEmail": "suhail.abood@gmail.com",
+      "authorUrl": ""
+    }
+  }
+}
