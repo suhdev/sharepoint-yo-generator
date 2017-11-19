@@ -64,6 +64,7 @@ module.exports = class extends Generator {
       }else if (props.whatAction === 'configure SiteDefinition'){
         return this._configureSiteDefinition(); 
       }
+      this.siteDefinition = this.config.get('useSharePoint')?require('sharepoint-util/templates/SiteDefinition'):null; 
       // To access props later use this.props.someAnswer;
       this.props = Object.assign({},this.props || {},props);
     })
@@ -149,8 +150,8 @@ module.exports = class extends Generator {
   _configureProject(){
     return this.prompt(configureProject(this._cfg))
       .then((answers)=>{
-        this.cfg = Object.assign({},this.cfg,answers);
-        this.config.set(this.cfg); 
+        this._cfg = Object.assign({},this._cfg,answers);
+        this.config.set(this._cfg); 
         this.config.save();
       })
   }
@@ -232,6 +233,12 @@ module.exports = class extends Generator {
         this.destinationPath('gulpfile.js')
       );
     }
+    if (!this.fs.exists(this.destinationPath('webpack.config.js'))) {
+      this.fs.copy(
+        this.templatePath(path.resolve(__dirname, '../../node_modules/sharepoint-util/templates/webpack.config.js')),
+        this.destinationPath('webpack.config.js')
+      );
+    }
     if (!this.fs.exists(this.destinationPath('tsconfig.json'))){
       this.fs.copy(
         this.templatePath(path.resolve(__dirname, '../../node_modules/sharepoint-util/templates/tsconfig.json')),
@@ -244,7 +251,9 @@ module.exports = class extends Generator {
         this.destinationPath('sass')
       );
     }
-    this.fs.writeJSON('SiteDefinition.json',this.siteDefinition,null,'    '); 
+    if (this.siteDefinition){
+      this.fs.writeJSON('SiteDefinition.json',this.siteDefinition,null,'    '); 
+    }
     // this.fs.
   }
 
