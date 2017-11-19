@@ -106,13 +106,13 @@ module.exports = class extends Generator {
     var isEdit = l?true:false; 
     var list = l || {}; 
     this.siteDefinition.lists = this.siteDefinition.lists || []; 
-    return this.prompt(addList(this.siteDefinition,list))
-      .then((answers)=>{
-        if (!isEdit){
-          this.siteDefinition.lists.push(list);
-        }
-        return this._configureSiteDefinition();
-      });
+    return addList(this,this.siteDefinition,list)
+    .then((answers)=>{
+      if (!isEdit){
+        this.siteDefinition.lists.push(list);
+      }
+      return this._configureSiteDefinition();
+    });
   }
 
   _configureSiteDefinition(){
