@@ -19,7 +19,7 @@ module.exports = class extends Generator {
       name: this.config.get('name') || 'test-project',
       url: this.config.get('url') || 'test-site',
       assetsDir: this.config.get('assetsDir') || './assets',
-      libDir: this.config.get('libDir') || './libDir',
+      libDir: this.config.get('libDir') || './lib',
       useSharePoint:this.config.get('useSharePoint') || true, 
       sharePointVersion:this.config.get('sharePointVersion') || 'online',
       configDir: this.config.get('configDir') || './config',
@@ -243,6 +243,15 @@ module.exports = class extends Generator {
       this.fs.copy(
         this.templatePath(path.resolve(__dirname, '../../node_modules/sharepoint-util/templates/tsconfig.json')),
         this.destinationPath('tsconfig.json')
+      );
+    }
+    if (!this.fs.exists(this.destinationPath('README.md'))){
+      this.fs.copyTpl(
+        this.templatePath(path.resolve(__dirname, '../../node_modules/sharepoint-util/templates/README.md.ejs')),
+        this.destinationPath('README.md'),
+        {
+          config:this._cfg
+        }
       );
     }
     if (!this.fs.exists(this.destinationPath('sass'))){
