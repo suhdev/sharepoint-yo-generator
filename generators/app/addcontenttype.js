@@ -1,5 +1,5 @@
 const generateId = require('./generateid'); 
-const {BuiltInContentTypeList} = require('sysdoc-util/lib/sharepoint/builtin');
+const { BuiltInContentTypeList } = require('sharepoint-util/lib/sharepoint/builtin');
 module.exports = function(siteDefinition,contentType){
     return [
         {

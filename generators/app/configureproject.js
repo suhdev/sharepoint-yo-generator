@@ -1,35 +1,26 @@
 module.exports = function(defaultConfig){
     return [{
       type: 'input',
-      name: 'projectName',
+      name: 'name',
       message: 'What is the project name, this should be lower case and no spaces?',
       default: defaultConfig.name,
-      when(answers){
-        return answers.whatAction === 'configure';
-      }
     },{
       type:'input', 
       name:'version', 
       message:'What is the version number of the project?', 
-      default:defaultConfig.version,
-      when(answers){
-        return answers.whatAction === 'configure';
-      }
+      default:defaultConfig.version
     },{
       type:'confirm',
       name:'useDefaultFolders',
       message:'Would you like to use default folders/directories configurations?',
-      default:true, 
-      when(answers){
-        return answers.whatAction === 'configure';
-      }
+      default:true,
     },{
       type:'input', 
       name:'assetsDir', 
       message:'What is the path to the assets directory?',
       default:defaultConfig.assetsDir,
       when(answers){
-        return !answers.useDefaultFolders && answers.whatAction === 'configure';
+        return !answers.useDefaultFolders;
       }
     },{
       type:'input', 
@@ -37,7 +28,7 @@ module.exports = function(defaultConfig){
       message:'What is the path to the library (vendor) directory?', 
       default:'./lib',
       when(answers){
-        return !answers.useDefaultFolders && answers.whatAction === 'configure';
+        return !answers.useDefaultFolders;
       }
     },{
         type:'input',
@@ -45,7 +36,7 @@ module.exports = function(defaultConfig){
         message:'What is the path to the source directory?', 
         default:'./src',
         when(answers){
-          return !answers.useDefaultFolders && answers.whatAction === 'configure';
+          return !answers.useDefaultFolders;
         }
     },{
         type:'input', 
@@ -53,7 +44,7 @@ module.exports = function(defaultConfig){
         message:'What is the path to the sass source directory?', 
         default:'./sass',
         when(answers){
-          return !answers.useDefaultFolders && answers.whatAction === 'configure';
+          return !answers.useDefaultFolders;
         }
     },{
         type:'input', 
@@ -61,7 +52,7 @@ module.exports = function(defaultConfig){
         message:'What is the path to the distribution directory (to host the compiled files)?',
         default:'./dist',
         when(answers){
-          return !answers.useDefaultFolders && answers.whatAction === 'configure';
+          return !answers.useDefaultFolders;
         }
     },{
         type:'input',
@@ -69,7 +60,7 @@ module.exports = function(defaultConfig){
         message:'What is the path to the CSS distribution directory?',
         default:'./dist/css',
         when(answers){
-          return !answers.useDefaultFolders && answers.whatAction === 'configure';
+          return !answers.useDefaultFolders;
         }
     },{
         type:'input', 
@@ -77,7 +68,7 @@ module.exports = function(defaultConfig){
         message:'What is the path to the JS distribution directory?', 
         default:'./dist/js',
         when(answers){
-          return !answers.useDefaultFolders && answers.whatAction === 'configure';
+          return !answers.useDefaultFolders;
         }
     },{
         type:'confirm',
@@ -94,7 +85,7 @@ module.exports = function(defaultConfig){
         default:'online', 
         choices:['online','2013','2016'],
         when:(answers)=>{
-          return answers.userSharePoint && answers.whatAction === 'configure'; 
+          return answers.userSharePoint; 
         }
     },{
         type:'confirm',
@@ -102,7 +93,7 @@ module.exports = function(defaultConfig){
         default:true, 
         message:'Do you want to use the default directory configurations for SharePoint?',
         when:(answers)=>{
-          return answers.usersSharePoint && answers.whatAction === 'configure'; 
+          return answers.usersSharePoint; 
         }
     },{
         type:'input',
@@ -110,7 +101,7 @@ module.exports = function(defaultConfig){
         message:'What is the path to the provisioning directory?', 
         default:'./deploy',
         when:(answers)=>{
-          return answers.userSharePoint && !answers.useSpDefaultDirectories && answers.whatAction === 'configure'; 
+          return answers.userSharePoint && !answers.useSpDefaultDirectories; 
         }
     },{
         type:'input',
@@ -118,7 +109,7 @@ module.exports = function(defaultConfig){
         message:'What is the assets deployment directory (i.e. the top level folder in Site Assets)?', 
         default:'Sysdoc',
         when:(answers)=>{
-          return answers.userSharePoint && !answers.useSpDefaultDirectories && answers.whatAction === 'configure'; 
+          return answers.userSharePoint && !answers.useSpDefaultDirectories; 
         }
     },{
         type:'input', 
@@ -134,7 +125,7 @@ module.exports = function(defaultConfig){
         message:'What is the path to the master page templates directory?',
         default:'./templates/masterpage',
         when:(answers)=>{
-          return answers.userSharePoint && !answers.useSpDefaultDirectories && answers.whatAction === 'configure'; 
+          return answers.userSharePoint && !answers.useSpDefaultDirectories; 
         }
     },{
         type:'input',
@@ -142,7 +133,7 @@ module.exports = function(defaultConfig){
         message:'What is the path to the page layout templates directory?', 
         default:'./templates/pagelayout',
         when:(answers)=>{
-          return answers.userSharePoint && !answers.useSpDefaultDirectories && answers.whatAction === 'configure'; 
+          return answers.userSharePoint && !answers.useSpDefaultDirectories; 
         } 
     },{
         type:'confirm',
@@ -150,7 +141,7 @@ module.exports = function(defaultConfig){
         message:'Have you mapped drives?',
         default:true, 
         when:(answers)=>{
-          return answers.userSharePoint && answers.whatAction === 'configure'; 
+          return answers.userSharePoint; 
         }
     },{
         type:'confirm',
@@ -158,7 +149,7 @@ module.exports = function(defaultConfig){
         message:'Do you want to use the default drives for SharePoint drives?',
         default:true, 
         when:(answers)=>{
-          return answers.userSharePoint && answers.mappingDrives && answers.whatAction === 'configure'; 
+          return answers.userSharePoint && answers.mappingDrives; 
         }
     },{
         type:'input',
@@ -166,7 +157,7 @@ module.exports = function(defaultConfig){
         message:'What is the drive pointing to the master page library?',
         default:'T',
         when(answers){
-          return answers.mappingDrives && answers.useSharePoint && answers.useDefaultMappedDrives && answers.whatAction === 'configure';
+          return answers.mappingDrives && answers.useSharePoint && answers.useDefaultMappedDrives;
         }
     },{
         type:'input',
@@ -174,7 +165,7 @@ module.exports = function(defaultConfig){
         message:'What is the drive pointing to the Site Assets library?',
         default:'S',
         when(answers){
-          return answers.mappingDrives && answers.useSharePoint && answers.useDefaultMappedDrives && answers.whatAction === 'configure';
+          return answers.mappingDrives && answers.useSharePoint && answers.useDefaultMappedDrives;
         }
     },{
         type:'input',
@@ -182,7 +173,7 @@ module.exports = function(defaultConfig){
         message:'What is the drive pointing to the Style Library?',
         default:'R',
         when(answers){
-          return answers.mappingDrives && answers.useSharePoint && answers.useDefaultMappedDrives && answers.whatAction === 'configure';
+          return answers.mappingDrives && answers.useSharePoint && answers.useDefaultMappedDrives;
         }
     }]; 
 }

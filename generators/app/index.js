@@ -2,7 +2,6 @@
 const Generator = require('yeoman-generator');
 const chalk = require('chalk');
 const yosay = require('yosay');
-const cdnjs = require('cdnjs'); 
 const path = require('path'); 
 const addField = require('./addfield');
 const addContentType = require('./addcontenttype'); 
@@ -116,7 +115,7 @@ module.exports = class extends Generator {
   }
 
   _configureSiteDefinition(){
-    this.siteDefinition = require('sysdoc-util/templates/SiteDefinition'); 
+    this.siteDefinition = require('sharepoint-util/templates/SiteDefinition'); 
     if (fs.existsSync(path.resolve(process.cwd(),'./SiteDefinition'))){
       this.siteDefinition = require(path.resolve(process.cwd(),'./SiteDefinition')); 
     }
@@ -150,7 +149,7 @@ module.exports = class extends Generator {
   _configureProject(){
     return this.prompt(configureProject(this._cfg))
       .then((answers)=>{
-        this.cfg = Object.assign({},this.cfg,props);
+        this.cfg = Object.assign({},this.cfg,answers);
         this.config.set(this.cfg); 
         this.config.save();
       })
@@ -162,9 +161,9 @@ module.exports = class extends Generator {
     let library = null;
     const libraryPrompts = [{
       type:'list', 
-      name:'cdnValue',
+      name:'cdnAction',
       message:'Do you want to add libraries from cdn?',
-      choices:['Add library','Remove all libraries','Continue'],
+      choices:['add a library','Remove all libraries','Continue'],
       default:'Continue',
     },{
       type: 'input',
@@ -172,60 +171,79 @@ module.exports = class extends Generator {
       message: 'What is the library name?',
       default: 'jquery',
       when:(answers)=>{
-        return answers.cdnValue === 'Add library';
+        return answers.cdnAction === 'add a library';
       }
-    },{
-      type:'list',
-      name:'libraryName',
-      message:'Available libraries matching your search:', 
-      choices:(answers)=>{
-        return new Promise((res)=>{
-          cdnjs.search(answers.cdnLibrary,(err,pkgs)=>{
-            if (err){
-              res([]); 
-              return; 
-            }
-            packages = pkgs; 
-            res(pkgs.map(e=>e.name)); 
-          });
-        });
-      },
-      when:(answers)=>{
-        return answers.cdnValue === 'Add library';
-      }
-    },{
-      type:'list',
-      name:'libraryVersion',
-      message:(answers)=>{
-        return `Available versions for ${answers.libraryName}`
-      },
-      choices:(answers)=>{
-        return new Promise((res)=>{
-          library = packages.find((e)=>e.name=== answers.libraryName); 
-          return res(_.map((library && library.versions) || {},(e,k)=>{
-            return k; 
-          }));
-        }); 
-      },
-      when:(answers)=>{
-        return answers.cdnValue === 'Add library';
-      }
-    }]; 
+    },
+    // {
+    //   type:'list',
+    //   name:'libraryName',
+    //   message:'Available libraries matching your search:', 
+    //   choices:(answers)=>{
+    //     return new Promise((res)=>{
+    //       cdnjs.search(answers.cdnLibrary,(err,pkgs)=>{
+    //         if (err){
+    //           res([]); 
+    //           return; 
+    //         }
+    //         packages = pkgs; 
+    //         res(pkgs.map(e=>e.name)); 
+    //       });
+    //     });
+    //   },
+    //   when:(answers)=>{
+    //     return answers.cdnValue === 'Add library';
+    //   }
+    // },
+    // {
+    //   type:'list',
+    //   name:'libraryVersion',
+    //   message:(answers)=>{
+    //     return `Available versions for ${answers.libraryName}`
+    //   },
+    //   choices:(answers)=>{
+    //     return new Promise((res)=>{
+    //       library = packages.find((e)=>e.name=== answers.libraryName); 
+    //       return res(_.map((library && library.versions) || {},(e,k)=>{
+    //         return k; 
+    //       }));
+    //     }); 
+    //   },
+    //   when:(answers)=>{
+    //     return answers.cdnValue === 'Add library';
+    //   }
+    // }
+  ]; 
 
     return this.prompt(libraryPrompts)
       .then((answers)=>{
-        if (answers.cdn){
-          this.libraries.push(library.versions[answers.libraryVersion]); 
+        if (answers.cdnAction === 'add a library'){
+          this.libraries.push(answers.cdnLibrary);
+          this._cfg.cdn.push(answers.cdnLibrary); 
+          // this.libraries.push(library.versions[answers.libraryVersion]); 
           return this.prompt(libraryPrompts); 
         }
       });
   }
 
   writing() {
-    this.fs.copy(
-      this.templatePath(path.resolve(__dirname,'../../node_modules/sysdoc-util/templates/gulpfile.js')),
-      this.destinationPath('gulpfile.js')
-    );
+    if (!this.fs.exists(this.destinationPath('gulpfile.js'))){
+      this.fs.copy(
+        this.templatePath(path.resolve(__dirname,'../../node_modules/sharepoint-util/templates/gulpfile.js')),
+        this.destinationPath('gulpfile.js')
+      );
+    }
+    if (!this.fs.exists(this.destinationPath('tsconfig.json'))){
+      this.fs.copy(
+        this.templatePath(path.resolve(__dirname, '../../node_modules/sharepoint-util/templates/tsconfig.json')),
+        this.destinationPath('tsconfig.json')
+      );
+    }
+    if (!this.fs.exists(this.destinationPath('sass'))){
+      this.fs.copy(
+        this.templatePath(path.resolve(__dirname,'../../node_modules/sharepoint-util/sass')),
+        this.destinationPath('sass')
+      );
+    }
     this.fs.writeJSON('SiteDefinition.json',this.siteDefinition,null,'    '); 
     // this.fs.
   }
@@ -235,9 +253,14 @@ module.exports = class extends Generator {
       'gulp','gulp-concat','gulp-uglify',
       'pump','cdnjs','colors','yargs',
       'gulp-data','nunjucks','request',
-      'gulp-nunjucks','gulp-sass'], { 'save-dev': true });
-    this.npmInstall(['lodash','react','react-dom',
-    'strikejs-react','strikejs-router']);
+      'gulp-nunjucks','gulp-sass',
+      'awesome-typescript-loader',
+      '@types/react','@types/react-dom',
+      '@types/lodash','@types/bluebird', 
+      '@types/sharepoint','json-loader'], { 'save-dev': true });
+    this.npmInstall(['lodash','react','sp-pnp-js','bluebird','react-dom','bootstrap-sass',
+    'strikejs-react@^6.0.0','strikejs-router',
+    '']);
   }
 
   install() {

@@ -1,5 +1,5 @@
 # generator-sharepoint-app [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url]
-> A yeoman generator for Sysdoc projects
+> A yeoman generator for SharePoint projects
 
 ## Installation
 

@@ -1,7 +1,7 @@
 const generateId = require('./generateid');
 const {TemplateTypesList,ListTemplateType,
     ListTemplateTypeByValue,
-    BuiltInContentTypeList} = require('sysdoc-util/lib/sharepoint/builtin'); 
+    BuiltInContentTypeList } = require('sharepoint-util/lib/sharepoint/builtin'); 
 module.exports = function(siteDefinition,list){
     return [{
         type:'input',
@@ -134,5 +134,19 @@ module.exports = function(siteDefinition,list){
             list.contentTypes = val; 
             return val;
         },
+    },{
+        type:'confirm',
+        name:'enableVersioning',
+        message:'Do you want to enable versioning on this list?',
+        default:()=>{
+            if (typeof list.enableVersioning !== "undefined"){
+                return list.enableVersioning; 
+            }
+            return false; 
+        },
+        filter:(val)=>{
+            list.enableVersioning = val; 
+            return val; 
+        }
     }];
 }
