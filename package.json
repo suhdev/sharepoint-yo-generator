@@ -1,7 +1,7 @@
 {
-  "name": "generator-sysdoc",
+  "name": "generator-sharepoint-app",
   "version": "0.0.0",
-  "description": "A yeoman generator for Sysdoc projects",
+  "description": "A yeoman generator for SharePoint projects",
   "homepage": "",
   "author": {
     "name": "Suhail Abood",
@@ -13,7 +13,6 @@
   ],
   "main": "generators/index.js",
   "keywords": [
-    "Sysdoc",
     "Generator",
     "yeoman-generator"
   ],

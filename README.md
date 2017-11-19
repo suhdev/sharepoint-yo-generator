@@ -1,13 +1,13 @@
-# generator-sysdoc [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url]
+# generator-sharepoint-app [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url]
 > A yeoman generator for Sysdoc projects
 
 ## Installation
 
-First, install [Yeoman](http://yeoman.io) and generator-sysdoc using [npm](https://www.npmjs.com/) (we assume you have pre-installed [node.js](https://nodejs.org/)).
+First, install [Yeoman](http://yeoman.io) and generator-sharepoint-app using [npm](https://www.npmjs.com/) (we assume you have pre-installed [node.js](https://nodejs.org/)).
 
 ```bash
 npm install -g yo
-npm install -g generator-sysdoc
+npm install -g generator-sharepoint-app
 ```
 
 Then generate your new project:
@@ -28,9 +28,9 @@ yo sysdoc
 MIT © [Suhail Abood]()
 
 
-[npm-image]: https://badge.fury.io/js/generator-sysdoc.svg
-[npm-url]: https://npmjs.org/package/generator-sysdoc
-[travis-image]: https://travis-ci.org/suhdev/generator-sysdoc.svg?branch=master
-[travis-url]: https://travis-ci.org/suhdev/generator-sysdoc
-[daviddm-image]: https://david-dm.org/suhdev/generator-sysdoc.svg?theme=shields.io
-[daviddm-url]: https://david-dm.org/suhdev/generator-sysdoc
+[npm-image]: https://badge.fury.io/js/generator-sharepoint-app.svg
+[npm-url]: https://npmjs.org/package/generator-sharepoint-app
+[travis-image]: https://travis-ci.org/suhdev/generator-sharepoint-app.svg?branch=master
+[travis-url]: https://travis-ci.org/suhdev/generator-sharepoint-app
+[daviddm-image]: https://david-dm.org/suhdev/generator-sharepoint-app.svg?theme=shields.io
+[daviddm-url]: https://david-dm.org/suhdev/generator-sharepoint-app
