@@ -260,9 +260,12 @@ function listExtraActions(generator,siteDefinition,list){
         })
 
 }
-module.exports = function(generator,siteDefinition,list){
+module.exports = function addList(generator,siteDefinition,l){
+    var isEdit = l ? true : false;
+    var list = l || {};
+    siteDefinition.lists = siteDefinition.lists || []; 
     let nextAction = null;
-    var basePromps = [{
+    var basePrompts = [{
         type:'input',
         name:'title',
         message:'What is the title of the list?',
@@ -409,8 +412,11 @@ module.exports = function(generator,siteDefinition,list){
         }
     }];
 
-    return generator.prompt(basePromps)
+    return generator.prompt(basePrompts)
         .then((answers)=>{
+            if (!isEdit) {
+                this.siteDefinition.lists.push(list);
+            }
             return listExtraActions(generator,siteDefinition,list); 
         });
 }

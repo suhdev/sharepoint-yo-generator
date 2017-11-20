@@ -1,5 +1,5 @@
-module.exports = function(defaultConfig){
-    return [{
+module.exports = function configureProject(generator,defaultConfig){
+    const prompts = [{
       type: 'input',
       name: 'name',
       message: 'What is the project name, this should be lower case and no spaces?',
@@ -176,4 +176,6 @@ module.exports = function(defaultConfig){
           return answers.mappingDrives && answers.useSharePoint && answers.useDefaultMappedDrives;
         }
     }]; 
+
+    return generator.prompt(prompts)
 }

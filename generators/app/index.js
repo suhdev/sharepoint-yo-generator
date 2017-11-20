@@ -9,6 +9,8 @@ const addList = require('./addlist');
 const configureSiteDefinition = require('./configuresitedefinition');
 const configureProject = require('./configureproject');  
 const fs = require('fs'); 
+const cleanSiteDefinition = require('./cleansitedefinition');
+const generateDeploymentScripts = require('./deploy');
 const _ = require('lodash'); 
 
 module.exports = class extends Generator {
@@ -51,20 +53,37 @@ module.exports = class extends Generator {
       name: 'whatAction',
       message:'What would you like to do?',
       default:'configure', 
-      choices:['configure','configure cdn libraries',
+      choices:[
+        'configure',
+        'generate deployment scripts',
+        'configure cdn libraries',
         'configure SiteDefinition',
         'nothing']
     }];
     return this.prompt(prompts)
     .then(props => {
-      if (props.whatAction === 'configure'){
+      console.log(`Locating SiteDefinition at ${this.destinationPath('SiteDefinition.json')}`);
+      var siteDefinitionExists = fs.existsSync(this.destinationPath('SiteDefinition.json'));
+      if (siteDefinitionExists){
+        console.log(`Found SiteDefinition at ${this.destinationPath('SiteDefinition.json')}`);
+      } 
+      if (this.config.get('useSharePoint') || siteDefinitionExists){
+        if (siteDefinitionExists){
+          this.siteDefinition = require(this.destinationPath('SiteDefinition.json')); 
+        }else {
+          this.siteDefinition = require('sharepoint-util/templates/SiteDefinition'); 
+        }
+      }
+      if (props.whatAction === 'generate deployment scripts'){
+        return this._generateDeploymentScripts(); 
+      }else if (props.whatAction === 'configure'){
         return this._configureProject(); 
       }else if (props.whatAction === 'configure cdn libraries'){
         return this._getLibrary();
       }else if (props.whatAction === 'configure SiteDefinition'){
         return this._configureSiteDefinition(); 
       }
-      this.siteDefinition = this.config.get('useSharePoint')?require('sharepoint-util/templates/SiteDefinition'):null; 
+      
       // To access props later use this.props.someAnswer;
       this.props = Object.assign({},this.props || {},props);
     })
@@ -75,83 +94,24 @@ module.exports = class extends Generator {
     });
   }
 
-  _addAField(f){
-    var isEdit = f?true:false; 
-    var field = f || {}; 
-    this.siteDefinition.fields = this.siteDefinition.fields || []; 
-    return this.prompt(addField(this.siteDefinition,field))
-      .then((answers)=>{
-        delete answers.provideDefault; 
-        if (!isEdit){
-          this.siteDefinition.fields.push(field); 
-        }
-        return this._configureSiteDefinition();
-      }); 
-  }
-
-  _addAContentType(c){
-    var isEdit = c?true:false; 
-    var contentType = c || {}; 
-    this.siteDefinition.contentTypes = this.siteDefinition.contentTypes || []; 
-    return this.prompt(addContentType(this.siteDefinition,contentType))
-      .then((answers)=>{
-        if (!isEdit){
-          this.siteDefinition.contentTypes.push(contentType);
-        }
-        return this._configureSiteDefinition();
-      });
-  }
-
-  _addAList(l){
-    var isEdit = l?true:false; 
-    var list = l || {}; 
-    this.siteDefinition.lists = this.siteDefinition.lists || []; 
-    return addList(this,this.siteDefinition,list)
-    .then((answers)=>{
-      if (!isEdit){
-        this.siteDefinition.lists.push(list);
-      }
-      return this._configureSiteDefinition();
-    });
+  _generateDeploymentScripts(){
+    return generateDeploymentScripts(this,this.siteDefinition,this._cfg); 
   }
 
   _configureSiteDefinition(){
-    this.siteDefinition = require('sharepoint-util/templates/SiteDefinition'); 
-    if (fs.existsSync(path.resolve(process.cwd(),'./SiteDefinition'))){
-      this.siteDefinition = require(path.resolve(process.cwd(),'./SiteDefinition')); 
-    }
     this.siteDefinition = this.siteDefinition || {};
     this.siteDefinition.fields = this.siteDefinition.fields || []; 
     this.siteDefinition.contentTypes = this.siteDefinition.contentTypes || []; 
     this.siteDefinition.lists = this.siteDefinition.lists || []; 
-    return this.prompt(configureSiteDefinition(this.siteDefinition))
-      .then((answers)=>{
-        this.props = Object.assign({},this.props,answers); 
-        if (answers.definitionAction === 'add a field' || 
-        (answers.definitionAction === 'edit a field' && answers.fieldName === 'New')){
-          return this._addAField();
-        }else if (answers.definitionAction === 'edit a field'){
-          return this._addAField(this.siteDefinition.fields.find((e)=>e.name === answers.fieldName));
-        }else if (answers.definitionAction === 'add a content type' || (
-          answers.definitionAction === 'edit a content type' && 
-          answers.contentTypeName === 'New')){
-          return this._addAContentType();
-        }else if (answers.definitionAction === 'edit a content type'){
-          return this._addAContentType(this.siteDefinition.contentTypes.find((e)=>e.name === answers.contentTypeName));
-        }else if (answers.definitionAction === 'add a list' || (
-          answers.definitionAction === 'edit a list' && answers.listTitle === 'New')){
-          return this._addAList();
-        }else if (answers.definitionAction === 'edit a list'){
-          return this._addAList(this.siteDefinition.lists.find((e)=>e.title === answers.listTitle)); 
-        }
-      });
+    this.siteDefinition.termGroups = this.siteDefinition.termGroups || [];
+    return configureSiteDefinition(this,this.siteDefinition); 
   }
 
   _configureProject(){
-    return this.prompt(configureProject(this._cfg))
+    return configureProject(this,this._cfg)
       .then((answers)=>{
-        this._cfg = Object.assign({},this._cfg,answers);
-        this.config.set(this._cfg); 
+        this._cfg = Object.assign({}, this._cfg, answers);
+        this.config.set(this._cfg);
         this.config.save();
       })
   }

@@ -1,7 +1,7 @@
 const _ = require('lodash');
-module.exports = function(siteDefinition){
+module.exports = function(generator,siteDefinition){
     var navAction = 'exit';
-    return [
+    return generator.prompt([
         {
             type:'list',
             name:'navAction',
@@ -67,5 +67,5 @@ module.exports = function(siteDefinition){
                 return answers.navType === 'Managed';
             }
         }
-    ]; 
+    ]); 
 }

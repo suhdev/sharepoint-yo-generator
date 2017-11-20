@@ -1,7 +1,10 @@
 const generateId = require('./generateid'); 
 const { BuiltInContentTypeList } = require('sharepoint-util/lib/sharepoint/builtin');
-module.exports = function(siteDefinition,contentType){
-    return [
+module.exports = function addContentType(generator,siteDefinition,c){
+    var isEdit = c ? true : false;
+    var contentType = c || {};
+    siteDefinition.contentTypes = siteDefinition.contentTypes || [];
+    const prompts = [
         {
             type:'input', 
             name:'name', 
@@ -89,4 +92,12 @@ module.exports = function(siteDefinition,contentType){
             }
         }
     ]; 
+
+    return generator.prompt(prompts)
+        .then((answers)=>{
+            if (!isEdit) {
+                this.siteDefinition.contentTypes.push(contentType);
+            }
+            return this._configureSiteDefinition();
+        });
 }

@@ -1,9 +1,17 @@
-module.exports = function(siteDefinition){
-    return [{
+const addField= require('./addfield'); 
+const addContentType =require('./addcontenttype');
+const addList = require('./addlist'); 
+const cleanSiteDefinition = require('./cleansitedefinition');
+const configureTermStore = require('./configuretermstore');
+module.exports = function configureSiteDefinition(generator,siteDefinition){
+    const prompts = [{
       type:'list',
       name:'definitionAction',
       message:'What do you want to do?',
-      choices:['add a field',
+      choices:[
+      'validate',
+      'configure term store', 
+      'add a field',
       'edit a field', 
       'remove a field', 
       'add a content type', 
@@ -64,8 +72,9 @@ module.exports = function(siteDefinition){
       },
       filter:(val)=>{
         siteDefinition.fields = siteDefinition.fields.filter((e)=>{
-          return e.name === val; 
+          return e.name !== val; 
         });
+        return val;
       },
       when:(answers)=>{
         return answers.definitionAction === 'remove a field'; 
@@ -86,4 +95,34 @@ module.exports = function(siteDefinition){
         return answers.definitionAction === 'remove a content type'; 
       }
     }];
+    var action = null; 
+    return generator.prompt(prompts).then((answers)=>{
+      action = answers.definitionAction; 
+      if (answers.definitionAction === 'validate') {
+        return cleanSiteDefinition(generator,siteDefinition);
+      } else if (answers.definitionAction === 'configure term store'){
+        return configureTermStore(generator,siteDefinition);
+      }else if (answers.definitionAction === 'add a field' ||
+        (answers.definitionAction === 'edit a field' && answers.fieldName === 'New')) {
+        return addField(generator,siteDefinition);
+      } else if (answers.definitionAction === 'edit a field') {
+        return addField(generator, siteDefinition.fields.find((e) => e.name === answers.fieldName));
+      } else if (answers.definitionAction === 'add a content type' || (
+        answers.definitionAction === 'edit a content type' &&
+        answers.contentTypeName === 'New')) {
+        return addContentType(generator,siteDefinition);
+      } else if (answers.definitionAction === 'edit a content type') {
+        return addContentType(generator,siteDefinition.contentTypes.find((e) => e.name === answers.contentTypeName));
+      } else if (answers.definitionAction === 'add a list' || (
+        answers.definitionAction === 'edit a list' && answers.listTitle === 'New')) {
+        return addList(generator,siteDefinition);
+      } else if (answers.definitionAction === 'edit a list') {
+        return addList(generator,siteDefinition.lists.find((e) => e.title === answers.listTitle));
+      }
+    })
+    .then(()=>{
+      if (action !== 'exit'){
+        return configureSiteDefinition(generator,siteDefinition);
+      }
+    });
 }
