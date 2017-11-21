@@ -13,7 +13,7 @@ npm install -g generator-sharepoint-app
 Then generate your new project:
 
 ```bash
-yo sysdoc
+yo sharepoint-app
 ```
 
 ## Getting To Know Yeoman
