@@ -1,6 +1,6 @@
 {
   "name": "generator-sharepoint-app",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "A yeoman generator for SharePoint projects",
   "homepage": "",
   "author": {
@@ -31,11 +31,13 @@
     "yeoman-test": "^1.7.0"
   },
   "dependencies": {
+    "bootstrap": "^4.0.0-beta.2",
+    "bootstrap-sass": "^3.3.7",
     "chalk": "^2.1.0",
     "lodash": "^4.17.4",
+    "sharepoint-util": "^1.0.0",
     "yeoman-generator": "^2.0.1",
-    "yosay": "^2.0.1",
-    "sharepoint-util":"^1.0.0"
+    "yosay": "^2.0.1"
   },
   "jest": {
     "testEnvironment": "node"

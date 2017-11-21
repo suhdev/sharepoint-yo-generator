@@ -31,7 +31,7 @@ module.exports = class extends Generator {
       distDir: this.config.get('distDir') || './dist',
       distCssDir: this.config.get('distCssDir') || './dist/css',
       distJsDir: this.config.get('distJsDir') || './dist/js',
-      bootstrapVersion: this.config.get('bootstrapVersion') || 'v3',
+      bootstrapVersion: this.config.get('bootstrapVersion') || 'v4',
       provisioningDir: this.config.get('provisioningDir') || './deploy',
       templatesDir: this.config.get('templatesDir') || './templates',
       version:this.config.get('version') || '1.0.0',
@@ -223,7 +223,10 @@ module.exports = class extends Generator {
         this.destinationPath(path.resolve(this._cfg.sassDir,'main.min.scss')),{
         config:this._cfg
       });
-      this.fs.copyTpl(this.templatePath(path.resolve(__dirname, `../../node_modules/sharepoint-util/templates/_bootstrap.ejs`)),
+      this.fs.copy(this.templatesPath(path.resolve(__dirname, this._cfg.bootstrapVersion === 'v4' ?'../node_modules/bootstrap/scss/_variables.scss':
+      '../node_modules/bootstrap-sass/assets/stylesheets/bootstrap/_variables.scss')),
+        this.destinationPath(path.resolve(this._cfg.sassDir, '_bootstrap.scss')));
+      this.fs.copyTpl(this.templatePath(path.resolve(__dirname, `../node_modules/sharepoint-util/templates/_bootstrap.ejs`)),
         this.destinationPath(path.resolve(this._cfg.sassDir,'_bootstrap.scss')), {
           config: this._cfg
         });
