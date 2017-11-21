@@ -24,6 +24,10 @@ module.exports = function configureProject(generator,defaultConfig){
         'set master page catalog mapped drive',
         'set site assets mapped drive', 
         'set style library mapped drive',
+        'disable npm install --save-dev',
+        'enable npm install --save-dev',
+        'disable npm install --save',
+        'enable npm install --save',
         'set bootstrap version'];
 
         c.push('back');
@@ -328,6 +332,15 @@ module.exports = function configureProject(generator,defaultConfig){
 
     return generator.prompt(prompts)
       .then((answers)=>{
+        if (answers.action === 'disable npm install --save-dev'){
+          defaultConfig.disableNpmDevInstall = true; 
+        }else if (answers.action === 'enable npm install --save-dev') {
+          defaultConfig.disableNpmDevInstall = false;
+        } else if (answers.action === 'disable npm install --save') {
+          defaultConfig.disableNpmInstall = true;
+        } else if (answers.action === 'enable npm install --save') {
+          defaultConfig.disableNpmInstall = false;
+        }
         generator.config.set(defaultConfig);
         generator.config.save();
         if (answers.action !== 'back' && answers.action !== 'init'){

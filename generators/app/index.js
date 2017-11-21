@@ -33,6 +33,8 @@ module.exports = class extends Generator {
       distJsDir: this.config.get('distJsDir') || './dist/js',
       bootstrapVersion: this.config.get('bootstrapVersion') || 'v4',
       provisioningDir: this.config.get('provisioningDir') || './deploy',
+      disableNpmDevInstall: this.config.get('disableNpmDevInstall') || false, 
+      disableNpmInstall: this.config.get('disableNpmInstall') || false, 
       templatesDir: this.config.get('templatesDir') || './templates',
       version:this.config.get('version') || '1.0.0',
       masterPageTemplatesDir: this.config.get('masterPageTemplatesDir') || './templates/masterpage',
@@ -214,8 +216,8 @@ module.exports = class extends Generator {
         }
       );
     }
-    
-    if (!this.fs.exists(this.destinationPath(this._cfg.sassDir))){
+    console.log(fs.existsSync(path.resolve(this.destinationPath(), this._cfg.sassDir)), path.resolve(this.destinationPath(), this._cfg.sassDir));
+    if (!fs.existsSync(path.resolve(this.destinationPath(),this._cfg.sassDir))){
       this.fs.copy(
         this.templatePath(path.resolve(__dirname,'../../node_modules/sharepoint-util/sass/partials')),
         this.destinationPath(this._cfg.sassDir)
@@ -239,21 +241,44 @@ module.exports = class extends Generator {
   }
 
   installingDeps() {
-    this.npmInstall(['typescript','webpack',
-      'gulp','gulp-concat','gulp-uglify',
-      'pump','cdnjs','colors','yargs',
-      'gulp-data','nunjucks','request',
-      'gulp-nunjucks','gulp-sass',
+    var depsToInstall = ['lodash', 'react', 'sp-pnp-js', 'bluebird', 'react-dom', this._cfg.bootstrapVersion === 'v3' ? 'bootstrap-sass' : 'bootstrap',
+      'strikejs-react@^6.0.0', 'strikejs-router']; 
+    var devDepsToInstall = ['typescript', 'webpack',
+      'gulp', 'gulp-concat', 'gulp-uglify',
+      'pump', 'cdnjs', 'colors', 'yargs',
+      'gulp-data', 'nunjucks', 'request',
+      'gulp-nunjucks', 'gulp-sass',
       'awesome-typescript-loader',
-      '@types/react','@types/react-dom',
-      '@types/lodash','@types/bluebird', 
-      '@types/sharepoint','json-loader'], { 'save-dev': true });
-    this.npmInstall(['lodash','react','sp-pnp-js','bluebird','react-dom',this._cfg.bootstrapVersion === 'v3'?'bootstrap-sass':'bootstrap',
-    'strikejs-react@^6.0.0','strikejs-router',
-    '']);
+      '@types/react', '@types/react-dom',
+      '@types/lodash', '@types/bluebird',
+      '@types/sharepoint', 'json-loader']; 
+    if (this.destinationPath('package.json')){
+      const pack = require(this.destinationPath('package.json')); 
+      if (pack.dependencies){
+        var installed = Object.keys(pack.dependencies); 
+        depsToInstall = depsToInstall.filter((e)=>{
+          return installed.indexOf(e) === -1; 
+        });
+      }
+      if (pack.devDependencies){
+        var installed = Object.keys(pack.devDependencies); 
+        devDepsToInstall = devDepsToInstall.filter((e)=>{
+          return installed.indexOf(e) !== -1; 
+        });
+      }
+    }
+    if (!this._cfg.disableNpmDevInstall){
+      this.npmInstall(devDepsToInstall, { 'save-dev': true });
+    }
+    if (!this._cfg.disableNpmInstall){
+      this.npmInstall(depsToInstall);
+    }
   }
 
   install() {
-    this.installDependencies();
+    if (!this._cfg.disableNpmDevInstall || !this._cfg.disableNpmInstall){
+      this.installDependencies();
+
+    }
   }
 };
