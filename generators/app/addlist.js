@@ -1,4 +1,5 @@
 const generateId = require('./generateid');
+const validateGuid = require('./validateguid');
 const { CustomActionLocationList, StandardMenuGroupList,
     ContentTypeSettingsGroupList, GroupsPageList, SiteSettingsGroupList,
     ListEditGroupList, DocumentLibraryGroupList,PeoplePageGroupList,
@@ -263,9 +264,37 @@ function listExtraActions(generator,siteDefinition,list){
 module.exports = function addList(generator,siteDefinition,l){
     var isEdit = l ? true : false;
     var list = l || {};
+    console.log(l);
     siteDefinition.lists = siteDefinition.lists || []; 
     let nextAction = null;
     var basePrompts = [{
+        type:'list',
+        name:'action',
+        message:'What do you want to do next?', 
+        when:(answers)=>{
+            return isEdit; 
+        },
+        choices:(answers)=>{
+
+            var c = ['set title',
+            'set id',
+            'set indexed',
+            'set description',
+            'templateType',
+            'create interface',
+            'set enable attachments',
+            'set enable content types',
+            'set enable folder creation',
+            'set enable versioning',
+            'set content types'];
+            if (list.contentTypes && list.contentTypes.length){
+                c.push('set default content type');
+            }
+            c.push('set custom actions');
+            c.push('back'); 
+            return c; 
+        }
+    },{
         type:'input',
         name:'title',
         message:'What is the title of the list?',
@@ -273,8 +302,14 @@ module.exports = function addList(generator,siteDefinition,l){
             list.title = val; 
             return val;
         },
+        validate:(val)=>{
+            return val && val.trim()?true:"Please provide a valid title for the list";
+        },
         default:()=>{
             return list.title; 
+        },
+        when:()=>{
+            return !isEdit; 
         }
     },{
         type:'input', 
@@ -284,8 +319,12 @@ module.exports = function addList(generator,siteDefinition,l){
             list.id = val; 
             return val; 
         },
+        validate:validateGuid,
         default:()=>{
             return list.id || generateId();
+        },
+        when: () => {
+            return !isEdit;
         }
     },{
         type:'input', 
@@ -297,6 +336,9 @@ module.exports = function addList(generator,siteDefinition,l){
         },
         default:()=>{
             return list.description || `Description for ${list.title}`;
+        },
+        when:(answers)=>{
+            return !isEdit || answers.action === 'set description';
         }
     },{
         type:'list', 
@@ -309,6 +351,9 @@ module.exports = function addList(generator,siteDefinition,l){
         choices:TemplateTypesList,
         default:()=>{
             return (list.templateType && ListTemplateTypeByValue[list.templateType]) || 'GenericList';
+        },
+        when:(answers)=>{
+            return !isEdit || answers.action === 'set template type';
         }
     },{
         type:'confirm',
@@ -319,7 +364,10 @@ module.exports = function addList(generator,siteDefinition,l){
                 return true; 
             }
             return true; 
-        }
+        },
+        when:(answers)=>{
+            return !isEdit || answers.action === 'create interface'; 
+        },
     },{
         type:'input', 
         name:'interface', 
@@ -327,6 +375,9 @@ module.exports = function addList(generator,siteDefinition,l){
         filter:(val)=>{
             list.interface = val; 
             return val;
+        },
+        when:(answers)=>{
+            return (!isEdit || answers.action === 'create interface') && answers.createInterface;
         },
         default:()=>{
             if (list.interface){
@@ -353,6 +404,9 @@ module.exports = function addList(generator,siteDefinition,l){
                 return list.enableAttachments; 
             }
             return true; 
+        },
+        when:(answers)=>{
+            return !isEdit || answers.action === 'set enable attachments'; 
         }
     },{
         type:'confirm',
@@ -367,6 +421,9 @@ module.exports = function addList(generator,siteDefinition,l){
                 return list.enableContentTypes; 
             }
             return true; 
+        },
+        when: (answers) => {
+            return !isEdit || answers.action === 'set enable content types';
         }
     },{
         type:'confirm',
@@ -381,6 +438,9 @@ module.exports = function addList(generator,siteDefinition,l){
                 return list.enableFolderCreation; 
             }
             return false; 
+        },
+        when: (answers) => {
+            return !isEdit || answers.action === 'set enable folder creation';
         }
     },{
         type:'checkbox',
@@ -396,6 +456,22 @@ module.exports = function addList(generator,siteDefinition,l){
             list.contentTypes = val; 
             return val;
         },
+        when: (answers) => {
+            return !isEdit || answers.action === 'set content types';
+        }
+    },{
+        type:'list',
+        name:'defaultContentType', 
+        message:'Which content type is the default for this list?',
+        choices:()=>{
+            return list.contentTypes;
+        },
+        default:()=>{
+            return list.contentTypes[0];
+        },
+        when: (answers) => {
+            return !isEdit || answers.action === 'set default content type';
+        }
     },{
         type:'confirm',
         name:'enableVersioning',
@@ -409,14 +485,25 @@ module.exports = function addList(generator,siteDefinition,l){
         filter:(val)=>{
             list.enableVersioning = val; 
             return val; 
+        },
+        when: (answers) => {
+            return !isEdit || answers.action === 'set enable versioning';
         }
     }];
-
+    let action = null; 
     return generator.prompt(basePrompts)
         .then((answers)=>{
+            action = answers.action; 
             if (!isEdit) {
-                this.siteDefinition.lists.push(list);
+                siteDefinition.lists.push(list);
             }
-            return listExtraActions(generator,siteDefinition,list); 
+            if (action === 'set custom actions'){
+                return listExtraActions(generator,siteDefinition,list); 
+            }
+        })
+        .then(()=>{
+            if (action !== 'back'){
+                return addList(generator,siteDefinition,list);
+            }
         });
 }

@@ -31,6 +31,7 @@ module.exports = class extends Generator {
       distDir: this.config.get('distDir') || './dist',
       distCssDir: this.config.get('distCssDir') || './dist/css',
       distJsDir: this.config.get('distJsDir') || './dist/js',
+      bootstrapVersion: this.config.get('bootstrapVersion') || 'v3',
       provisioningDir: this.config.get('provisioningDir') || './deploy',
       templatesDir: this.config.get('templatesDir') || './templates',
       version:this.config.get('version') || '1.0.0',
@@ -62,11 +63,7 @@ module.exports = class extends Generator {
     }];
     return this.prompt(prompts)
     .then(props => {
-      console.log(`Locating SiteDefinition at ${this.destinationPath('SiteDefinition.json')}`);
       var siteDefinitionExists = fs.existsSync(this.destinationPath('SiteDefinition.json'));
-      if (siteDefinitionExists){
-        console.log(`Found SiteDefinition at ${this.destinationPath('SiteDefinition.json')}`);
-      } 
       if (this.config.get('useSharePoint') || siteDefinitionExists){
         if (siteDefinitionExists){
           this.siteDefinition = require(this.destinationPath('SiteDefinition.json')); 
@@ -84,8 +81,6 @@ module.exports = class extends Generator {
         return this._configureSiteDefinition(); 
       }
       
-      // To access props later use this.props.someAnswer;
-      this.props = Object.assign({},this.props || {},props);
     })
     .then(()=>{
       if (this.libraries.length){
@@ -110,10 +105,9 @@ module.exports = class extends Generator {
   _configureProject(){
     return configureProject(this,this._cfg)
       .then((answers)=>{
-        this._cfg = Object.assign({}, this._cfg, answers);
         this.config.set(this._cfg);
         this.config.save();
-      })
+      });
   }
 
   _getLibrary(){
@@ -216,9 +210,17 @@ module.exports = class extends Generator {
     }
     if (!this.fs.exists(this.destinationPath('sass'))){
       this.fs.copy(
-        this.templatePath(path.resolve(__dirname,'../../node_modules/sharepoint-util/sass')),
-        this.destinationPath('sass')
+        this.templatePath(path.resolve(__dirname,'../../node_modules/sharepoint-util/sass/partials')),
+        this.destinationPath(this._cfg.sassDir)
       );
+      this.fs.copyTpl(this.templatePath(path.resolve(__dirname,'../../node_modules/sharepoint-util/templates/main.min.scss.ejs')),
+        this.destinationPath(path.resolve(this._cfg.sassDir,'main.min.scss')),{
+        config:this._cfg
+      });
+      this.fs.copyTpl(this.templatePath(path.resolve(__dirname, `../../node_modules/sharepoint-util/templates/_bootstrap.ejs`)),
+        this.destinationPath(path.resolve(this._cfg.sassDir,'_bootstrap.scss')), {
+          config: this._cfg
+        });
     }
     if (this.siteDefinition){
       this.fs.writeJSON('SiteDefinition.json',this.siteDefinition,null,'    '); 
@@ -236,7 +238,7 @@ module.exports = class extends Generator {
       '@types/react','@types/react-dom',
       '@types/lodash','@types/bluebird', 
       '@types/sharepoint','json-loader'], { 'save-dev': true });
-    this.npmInstall(['lodash','react','sp-pnp-js','bluebird','react-dom','bootstrap-sass',
+    this.npmInstall(['lodash','react','sp-pnp-js','bluebird','react-dom',this._cfg.bootstrapVersion === 'v3'?'bootstrap-sass':'bootstrap',
     'strikejs-react@^6.0.0','strikejs-router',
     '']);
   }

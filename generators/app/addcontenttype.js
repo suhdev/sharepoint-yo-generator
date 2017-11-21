@@ -6,6 +6,27 @@ module.exports = function addContentType(generator,siteDefinition,c){
     siteDefinition.contentTypes = siteDefinition.contentTypes || [];
     const prompts = [
         {
+            type:'list',
+            name:'action',
+            message:'What would you like to do next?', 
+            choices:()=>{
+                var c = [
+                'set name',
+                'set id',
+                'set description',
+                'set parent', 
+                'set group'];
+                if (siteDefinition.fields && siteDefinition.fields.length){
+                    c.push('set fields');
+                }
+                c.push('back'); 
+                return c; 
+            },
+            when:(answers)=>{
+                return isEdit; 
+            }
+        },
+        {
             type:'input', 
             name:'name', 
             message:'What is the name of the content type?',
@@ -15,6 +36,9 @@ module.exports = function addContentType(generator,siteDefinition,c){
             }, 
             default:()=>{
                 return contentType.name; 
+            },
+            when:(answers)=>{
+                return !isEdit || answers.action === 'set name'; 
             }
         },
         {
@@ -27,6 +51,9 @@ module.exports = function addContentType(generator,siteDefinition,c){
             message:"What is the GUID of the content type?", 
             default:()=>{
                 return contentType.id || generateId();
+            },
+            when:(answers)=>{
+                return !isEdit || answers.action === 'set id'; 
             }
         },
         {
@@ -44,6 +71,9 @@ module.exports = function addContentType(generator,siteDefinition,c){
                 if (siteDefinition.contentTypes && siteDefinition.contentTypes.length){
                     return siteDefinition.contentTypes[0].group; 
                 }
+            },
+            when: (answers) => {
+                return !isEdit || answers.action === 'set group';
             }
         },
         {
@@ -56,6 +86,9 @@ module.exports = function addContentType(generator,siteDefinition,c){
             message:'What is the description of the field?', 
             default:()=>{
                 return contentType.description || `Description for ${contentType.name}`;
+            },
+            when: (answers) => {
+                return !isEdit || answers.action === 'set description';
             }
         },
         {
@@ -74,6 +107,9 @@ module.exports = function addContentType(generator,siteDefinition,c){
                     return contentType.parent; 
                 }
                 return "Item"; 
+            },
+            when: (answers) => {
+                return !isEdit || answers.action === 'set parent';
             }
         },
         {
@@ -89,15 +125,23 @@ module.exports = function addContentType(generator,siteDefinition,c){
             message:'What fields do you want to include in this content type?', 
             default:()=>{
                 return contentType.fields;
+            },
+            when: (answers) => {
+                return !isEdit || answers.action === 'set fields';
             }
         }
     ]; 
-
+    var action = null;
     return generator.prompt(prompts)
         .then((answers)=>{
+            action = answers.action; 
             if (!isEdit) {
                 this.siteDefinition.contentTypes.push(contentType);
             }
-            return this._configureSiteDefinition();
+        })
+        .then(()=>{
+            if (action !== 'back'){
+                return addContentType(generator,siteDefinition,contentType); 
+            }
         });
 }

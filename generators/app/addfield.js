@@ -1,11 +1,89 @@
 const generateId = require('./generateid'); 
 const skip = require('./skip');
 const validateGuid = require('./validateguid');
+const configs = [{
+  name: 'Indexed',
+  value: 'indexed',
+  checked:false, 
+}, {
+  name: 'Hidden',
+  value:'hidden',
+  checked:false, 
+}, {
+  name: 'Required',
+  value: 'required',
+  checked:false,
+}, {
+  name: 'Multi Field',
+  value: 'mult',
+  checked:false
+}, {
+  name: 'Show In File Dialog',
+  value: 'showInFileDlg',
+  checked: true,
+}, {
+  name: 'Show In Edit Form',
+  value: 'showInEditForm',
+  checked: true,
+}, {
+  name: 'Show In New Form',
+  value: 'showInNewForm',
+  checked: true,
+}, {
+  name: 'Show In Display Form',
+  value: 'showInDisplayForm',
+  checked: true
+},{
+  name:'Rich Text Field',
+  value:'richText', 
+  checked:true,
+  condition:(type)=>{
+    return type === 'HTML' || type==='Note'; 
+  }
+}];
 module.exports = function addField(generator,siteDefinition,f){
   var isEdit = f ? true : false;
   var field = f || {};
+  
   siteDefinition.fields = siteDefinition.fields || [];
     const prompts = [{
+      type:'list',
+      name:'action',
+      message:'What do you want to do next?', 
+      choices:()=>{
+        var c = [
+          'set id',
+          'set internal name', 
+          'set display name', 
+          'set type',
+          'set group',
+          'set description',
+          'set default',
+          'set field settings'
+        ];
+        if (field.type.toLowerCase().indexOf('taxonomy') !== -1 && siteDefinition.termGroups && siteDefinition.termGroups.length){
+          c.push('set term store settings');
+        }
+        if (field.type === 'DateTime' || field.type === 'Choice' ||
+          field.type === 'MultiChoice' || field.type === 'URL'){
+          c.push('set choice list');
+          c.push('set format');
+        }
+        if (field.type.toLowerCase().indexOf('lookup') !== -1){
+          c.push('set show field'); 
+          c.push('set lookup list');
+        }
+        if (field.type === 'Number' ||
+        field.type === 'Integer'){
+          c.push('set minimum value','set maximum value');
+        }
+        c.push('back');
+        return c;
+      },
+      when:()=>{
+        return isEdit; 
+      }
+    },{
       type:'input',
       name:'id',
       message:'What is the GUID of the field?',
@@ -19,7 +97,10 @@ module.exports = function addField(generator,siteDefinition,f){
         field.id = val;
         return val; 
       },
-      validate: validateGuid
+      validate: validateGuid,
+      when:(answers)=>{
+        return !isEdit || answers.action === 'set id'; 
+      }
     },{
       type:'input',
       name:'name',
@@ -33,6 +114,9 @@ module.exports = function addField(generator,siteDefinition,f){
       },
       default:()=>{
         return field.name;
+      },
+      when:(answers)=>{
+        return !isEdit || answers.action === 'set name'; 
       }
     },{
       type:'input',
@@ -44,6 +128,9 @@ module.exports = function addField(generator,siteDefinition,f){
       },
       default:(answers)=>{
         return field.description || `Content for field ${answers.name}`;
+      },
+      when:(answers)=>{
+        return !isEdit || answers.action === 'set description';
       }
     },{
       type:'input',
@@ -51,6 +138,9 @@ module.exports = function addField(generator,siteDefinition,f){
       message:'What is the display name of the field?',
       validate:(val)=>{
         return val && val.trim()?true:'Please provide a valid display name';
+      },
+      when:(answers)=>{
+        return !isEdit || answers.action === 'set display name'; 
       },
       filter:(val)=>{
         field.displayName = val; 
@@ -67,6 +157,9 @@ module.exports = function addField(generator,siteDefinition,f){
         field.group = val; 
         return val; 
       },
+      when:(answers)=>{
+        return !isEdit || answers.action === 'set group';
+      },
       default:(answers)=>{
         if (field.group){
           return field.group;
@@ -76,20 +169,6 @@ module.exports = function addField(generator,siteDefinition,f){
           return fields[0].group; 
         }
       }
-    },{
-      type:'confirm',
-      name:'required',
-      message:'Is this a required field?',
-      field:(val)=>{
-        field.required = val; 
-        return val; 
-      },
-      default:()=>{
-        if (typeof field.required !== "undefined"){
-          return field.required;
-        }
-        return false;
-      } 
     },{
       type:'list',
       name:'type',
@@ -109,13 +188,16 @@ module.exports = function addField(generator,siteDefinition,f){
           return field.type; 
         }
         return 'Text'
+      },
+      when:(answers)=>{
+        return !isEdit || answers.action === 'set type';
       }
     },{
       type:'input',
       name:'choices', 
       when:(answers)=>{
-        return answers.type === 'Choice' ||
-          answers.type === 'MultiChoice'; 
+        return (!isEdit && (answers.type === 'Choice' ||
+          answers.type === 'MultiChoice')) || answers.action === 'set choice list'; 
       },
       validate:(val)=>{
         var c1= val && val.trim();
@@ -127,14 +209,17 @@ module.exports = function addField(generator,siteDefinition,f){
         field.choices = choices; 
         return val; 
       },
+      default:()=>{
+        return (field.choices||[]).join(';');
+      },
       message:'Enter choices, seperate by semi-colon ";" e.g. Choice 1;Choice 2'
     },{
       type:'list',
       when:(answers)=>{
-        return (answers.type === 'TaxonomyFieldType' ||
-          answers.type === 'TaxonomyFieldTypeMulti') && 
-          siteDefinition.termGroups && 
-          siteDefinition.termGroups.length; 
+        return (((!isEdit && (answers.type === 'TaxonomyFieldType' ||
+          answers.type === 'TaxonomyFieldTypeMulti')) || (answers.action === 'set term store settings')) && 
+          (siteDefinition.termGroups && 
+          siteDefinition.termGroups.length));
       },
       name:'termGroupName', 
       filter:(val)=>{
@@ -151,13 +236,15 @@ module.exports = function addField(generator,siteDefinition,f){
           var group = (siteDefinition.termGroups||[]).find((e)=>{
             return answers.termGroupName === e.name; 
           });
-          return (answers.type === 'TaxonomyFieldType' ||
-            answers.type === 'TaxonomyFieldTypeMulti') &&
+          return ((!isEdit && (answers.type === 'TaxonomyFieldType' ||
+            answers.type === 'TaxonomyFieldTypeMulti')) || (
+              answers.action === 'set term store settings'
+            ))  &&(
             siteDefinition.termGroups &&
             siteDefinition.termGroups.length && 
             group && 
             group.termSets &&
-            group.termSets.length;
+            group.termSets.length);
         },
         name:'termSetName', 
         choices:(answers)=>{
@@ -173,26 +260,6 @@ module.exports = function addField(generator,siteDefinition,f){
           return val; 
         },
         message: 'Select a Term Set to use to use for your TaxonomyField'
-    },{
-      type:'confirm',
-      name:'mult',
-      message:'Is it a multi field?',
-      when:(answers)=>{
-        return answers.type.toLowerCase().indexOf('multi') === -1; 
-      },
-      filter:(val)=>{
-        field.mult = val; 
-        return val; 
-      },
-      default:()=>{
-        if (typeof field.mult !== "undefined"){
-          return field.mult; 
-        }else if (typeof field.multi !== "undefined"){
-          return field.multi; 
-        }else {
-          return false; 
-        }
-      }, 
     },{
       type:'list', 
       name:'format', 
@@ -224,28 +291,10 @@ module.exports = function addField(generator,siteDefinition,f){
         return "None"; 
       },
       when:(answers)=>{
-        return answers.type === 'DateTime' ||
+        return (!isEdit && (answers.type === 'DateTime' ||
           answers.type === 'Choice' ||
           answers.type === 'MultiChoice' ||
-          answers.type === 'URL'; 
-      }
-    },{
-      type:'confirm',
-      name:'richText', 
-      message:'Is it a rich text field?',
-      when:(answers)=>{
-        return answers.type === 'Note' ||
-          answers.type === 'HTML'; 
-      },
-      default:()=>{
-        if (typeof field.richText !== "undefined"){
-          return field.richText; 
-        }
-        return true; 
-      }, 
-      filter:(val)=>{
-        field.richText = val; 
-        return val;
+          answers.type === 'URL')) || answers.action === 'set format'; 
       }
     },{
       type:'confirm',
@@ -257,12 +306,15 @@ module.exports = function addField(generator,siteDefinition,f){
         }
         return false; 
       },
+      when:()=>{
+        return !isEdit;
+      }
     },{
       type:'input',
       name:'default', 
       message:'What is the default value?',
       when:(answers)=>{
-        return answers.provideDefault; 
+        return (!isEdit && answers.provideDefault )||answers.action === 'set default'; 
       },
       filter:(val)=>{
         if (field.type === 'Number' || field.type === 'Integer'){
@@ -281,8 +333,9 @@ module.exports = function addField(generator,siteDefinition,f){
       type:'list',
       name:'listTitle',
       when:(answers)=>{
-        return answers.type === 'Lookup' ||
-          answers.type === 'LookupMulti'; 
+        return (!isEdit && (answers.type === 'Lookup' ||
+          answers.type === 'LookupMulti')) || 
+          answers.action === 'set lookup list'; 
       },
       message:'What is the lookup field list?', 
       default:()=>{
@@ -296,6 +349,32 @@ module.exports = function addField(generator,siteDefinition,f){
       },
       choices:()=>{
         return (siteDefinition.lists || []).map((e)=>e.title); 
+      }
+    },{
+      type:'checkbox',
+      name:'configs', 
+      message:'Toggle to enable/disable configurations:',
+      filter:(val)=>{
+        configs.forEach((e)=>{
+          field[e.value] = val.indexOf(e.value) !== -1;
+        });
+        return val;
+      },
+      choices:()=>{
+        var c = configs.map((e)=>{
+          return {
+            name:e.name,
+            value:e.value, 
+            checked: typeof field[e.value] !== "undefined" ? field[e.value] : e.checked
+          }
+        }).filter((e)=>{
+          return e.condition?e.condition(field.type):true; 
+        }); 
+        return c; 
+      },
+      when:(answers)=>{
+        return answers.action === 'set field settings' ||
+          !isEdit; 
       }
     },{
       type:'input',
@@ -312,53 +391,9 @@ module.exports = function addField(generator,siteDefinition,f){
         return val; 
       },
       when:(answers)=>{
-        return answers.type === 'Lookup' ||
-          answers.type === 'LookupMulti'; 
+        return (!isEdit && (answers.type === 'Lookup' ||
+          answers.type === 'LookupMulti')) || answers.action === 'set show field'; 
       }
-    },{
-      type:'confirm',
-      name:'indexed',
-      message:'Is it an indexed field?',
-      filter:(val)=>{
-        field.indexed = val; 
-        return val; 
-      },
-      default:()=>{
-        if (typeof field.indexed !== "undefined"){
-          return field.indexed; 
-        }
-      }, 
-
-    },{
-      type:'confirm', 
-      name:'showInDisplayForm', 
-      message:'Do you want to show the field in display form?',
-      default:()=>{
-        if (typeof field.showInDisplayForm !== "undefined"){
-          return field.showInDisplayForm; 
-        }
-        return true; 
-      }, 
-    },{
-      type:'confirm',
-      name:'hidden',
-      message:'Is it a hidden field?', 
-      default:()=>{
-        if (typeof field.hidden !== "undefined"){
-          return field.hidden; 
-        }
-        return false; 
-      }, 
-    },{
-      type:'confirm',
-      name:'showInFileDlg', 
-      message:'Do you want to show the field in file dialog?',
-      default:()=>{
-        if (typeof field.showInFileDlg !== "undefined"){
-          return field.showInFileDlg; 
-        }
-        return true; 
-      }, 
     },{
       type:'input', 
       name:'min', 
@@ -369,8 +404,8 @@ module.exports = function addField(generator,siteDefinition,f){
         }
       },
       when:(answers)=>{
-        return answers.type === 'Number' || 
-          answers.type === 'Integer'; 
+        return (!isEdit && (answers.type === 'Number' || 
+          answers.type === 'Integer')) || answers.action === 'set minimum value'; 
       },
       filter:(val)=>{
         if (val === '-' || val === '' || val == null){
@@ -386,8 +421,8 @@ module.exports = function addField(generator,siteDefinition,f){
       name:'max', 
       message:'What is the maximum value?',
       when:(answers)=>{
-        return answers.type === 'Number' || 
-          answers.type === 'Integer'; 
+        return (!isEdit && (answers.type === 'Number' || 
+          answers.type === 'Integer')) || answers.action === 'set maximum value'; 
       },
       default:()=>{
         if (typeof field.max !== "undefined"){
