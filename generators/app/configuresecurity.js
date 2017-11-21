@@ -143,16 +143,16 @@ module.exports = function configureSecurity(generator,siteDefinition){
             siteDefinition.security = siteDefinition.security || {};
             if (action === 'add admin'){
                 siteDefinition.security.admins = siteDefinition.security.admins || []; 
-                siteDefinition.security.admins.push(answers.user); 
+                siteDefinition.security.admins.push(answers.user.trim()); 
             }else if (action === 'add member'){
                 siteDefinition.security.members = siteDefinition.security.members || []; 
-                siteDefinition.security.members.push(answers.user); 
+                siteDefinition.security.members.push(answers.user.trim()); 
             } else if (action === 'add visitor') {
                 siteDefinition.security.visitors = siteDefinition.security.visitors || [];
-                siteDefinition.security.visitors.push(answers.user); 
+                siteDefinition.security.visitors.push(answers.user.trim()); 
             } else if (action === 'add owner'){
                 siteDefinition.security.owners = siteDefinition.security.owners || [];
-                siteDefinition.security.owners.push(answers.user); 
+                siteDefinition.security.owners.push(answers.user.trim()); 
             } else if (action === 'add user group'){
                 return addUserGroup(generator,siteDefinition); 
             } else if (action === 'edit user group'){
