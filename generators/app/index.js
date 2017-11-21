@@ -214,22 +214,23 @@ module.exports = class extends Generator {
         }
       );
     }
+    
     if (!this.fs.exists(this.destinationPath('sass'))){
       this.fs.copy(
         this.templatePath(path.resolve(__dirname,'../../node_modules/sharepoint-util/sass/partials')),
         this.destinationPath(this._cfg.sassDir)
       );
+    }
+    if (!this.fs.exists(this.destinationPath(path.resolve(this._cfg.sassDir, 'main.min.scss')))){
       this.fs.copyTpl(this.templatePath(path.resolve(__dirname,'../../node_modules/sharepoint-util/templates/main.min.scss.ejs')),
         this.destinationPath(path.resolve(this._cfg.sassDir,'main.min.scss')),{
         config:this._cfg
       });
-      this.fs.copy(this.templatesPath(path.resolve(__dirname, this._cfg.bootstrapVersion === 'v4' ?'../../node_modules/bootstrap/scss/_variables.scss':
+    }
+    if (!this.fs.exists(this.destinationPath(path.resolve(this._cfg.sassDir, '_bootstrap.scss')))){
+      this.fs.copy(this.templatePath(path.resolve(__dirname, this._cfg.bootstrapVersion === 'v4' ?'../../node_modules/bootstrap/scss/_variables.scss':
       '../../node_modules/bootstrap-sass/assets/stylesheets/bootstrap/_variables.scss')),
         this.destinationPath(path.resolve(this._cfg.sassDir, '_bootstrap.scss')));
-      this.fs.copyTpl(this.templatePath(path.resolve(__dirname, `../node_modules/sharepoint-util/templates/_bootstrap.ejs`)),
-        this.destinationPath(path.resolve(this._cfg.sassDir,'_bootstrap.scss')), {
-          config: this._cfg
-        });
     }
     if (this.siteDefinition){
       this.fs.writeJSON('SiteDefinition.json',this.siteDefinition,null,'    '); 
