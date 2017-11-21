@@ -2,9 +2,11 @@ const addField= require('./addfield');
 const addContentType =require('./addcontenttype');
 const addList = require('./addlist'); 
 const _ = require('lodash');
+const fs = require('fs');
 const cleanSiteDefinition = require('./cleansitedefinition');
 const configureTermStore = require('./configuretermstore');
 const configureSecutiry = require('./configuresecurity');
+const configureApps = require('./configureapps'); 
 const configureFeatures = require('./configurefeatures');
 const configureNavigation = require('./configurenavigation');
 const configureCommands = require('./configurecommands'); 
@@ -52,9 +54,16 @@ module.exports = function configureSiteDefinition(generator,siteDefinition){
         'configure features',
         'configure navigation',
         'set home page',
+        'set default page layout', 
         // 'configure commands', 
         'enable using site collection term group',
         'disable using site collection term group'];
+          if (fs.existsSync(generator.destinationPath('./apps'))){
+            c.push('refresh sharepoint apps list');
+          }
+          if (siteDefinition.apps && siteDefinition.apps.length){
+            c.splice(5,0,'configure apps');
+          }
           var ctypes = getDocTypes(siteDefinition.contentTypes||[]);
           if (ctypes.length > 0){
             c.push('set default pages library content type');
@@ -168,8 +177,65 @@ module.exports = function configureSiteDefinition(generator,siteDefinition){
         return answers.action === 'set home page'; 
       },
       filter:(val)=>{
-        siteDefinition.homePage = val; 
+        siteDefinition.homePage = val.trim(); 
         return val; 
+      },
+      validate:(val)=>{
+        return val && val.trim();
+      },
+      default:()=>{
+        return siteDefinition.homePage; 
+      }
+    },{
+      type:'input',
+      name:'defaultPageLayout', 
+      message:'What is the name of the page layout to set as default? i.e. Test/DefaultLayout.aspx (this internally translates to _catalog/masterpage/Test/DefaultLayout.aspx',
+      when:(answers)=>{
+        return answers.action === 'set default page layout'; 
+      },
+      filter:(val)=>{
+        return siteDefinition.defaultPageLayout = val.trim(); 
+      },
+      validate:(val)=>{
+        return val && val.trim();
+      },
+      default:()=>{
+        return siteDefinition.defaultPageLayout;
+      }
+    },{
+      type:'checkbox', 
+      name:'appList', 
+      message:'Here is a list of all the available apps', 
+      filter:(val)=>{
+        siteDefinition.apps = val.filter((e)=>e !== 'None').map((e)=>{
+          return {
+            name:e,
+            path:generator.destinationPath(`./app/${e}`),
+            force:false
+          };
+        });
+        return val;
+      },
+      choices:(answers)=>{
+        var apps = []; 
+        try{
+          apps = fs.readdirSync(generator.destinationPath('./apps'));
+          apps = apps.filter((e)=>{
+            return e.endsWith('.app'); 
+          })
+          .map((e)=>{
+            return {
+              name:e, 
+              value:e
+            };
+          });
+        }catch(err){
+          apps = [{name:'None',value:'None'}]; 
+        }
+        return apps;
+      },
+      when:(answers)=>{
+        return answers.definitionAction === 'refresh sharepoint apps list'; 
       }
     }];
     var action = null; 
@@ -203,10 +269,12 @@ module.exports = function configureSiteDefinition(generator,siteDefinition){
         return configureNavigation(generator,siteDefinition); 
       }else if (answers.definitionAction === 'enable using site collection term group'){
         siteDefinition.setSiteCollectionTermGroupName = true; 
-      }else if (answrs.definitionAction === 'disable using site collection term group'){
+      }else if (answers.definitionAction === 'disable using site collection term group'){
         siteDefinition.setSiteCollectionTermGroupName = false; 
       }else if (answers.definitionAction === 'configure commands'){
         return configureCommands(generator,siteDefinition); 
+      }else if (answers.definitionAction === 'configure apps'){
+        return configureApps(generator,siteDefinition);
       }
     })
     .then(()=>{
