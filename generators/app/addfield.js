@@ -37,8 +37,8 @@ const configs = [{
   name:'Rich Text Field',
   value:'richText', 
   checked:true,
-  condition:(type)=>{
-    return type === 'HTML' || type==='Note'; 
+  when:(field)=>{
+    return field.type === 'HTML' || field.type==='Note'; 
   }
 }];
 module.exports = function addField(generator,siteDefinition,f){
@@ -356,7 +356,13 @@ module.exports = function addField(generator,siteDefinition,f){
       message:'Toggle to enable/disable configurations:',
       filter:(val)=>{
         configs.forEach((e)=>{
-          field[e.value] = val.indexOf(e.value) !== -1;
+          if (e.when){
+            if (e.when(field)){
+              field[e.value] = val.indexOf(e.value) !== -1;
+            }
+          }else {
+            field[e.value] = val.indexOf(e.value) !== -1;
+          }
         });
         return val;
       },
@@ -365,10 +371,11 @@ module.exports = function addField(generator,siteDefinition,f){
           return {
             name:e.name,
             value:e.value, 
-            checked: typeof field[e.value] !== "undefined" ? field[e.value] : e.checked
+            checked: typeof field[e.value] !== "undefined" ? field[e.value] : e.checked,
+            when:e.when
           }
         }).filter((e)=>{
-          return e.condition?e.condition(field.type):true; 
+          return e.when?e.when(field):true; 
         }); 
         return c; 
       },
@@ -447,5 +454,8 @@ module.exports = function addField(generator,siteDefinition,f){
           siteDefinition.fields.push(field);
         }
         // return configureSiteDefinition();
+        if (answers.action !== 'back'){
+          return addField(generator,siteDefinition,field);
+        }
     });
 };
