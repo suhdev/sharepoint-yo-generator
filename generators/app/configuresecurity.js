@@ -8,22 +8,27 @@ module.exports = function configureSecurity(generator,siteDefinition){
             var c = [
                 'add admin'];
             if (siteDefinition.security && siteDefinition.security.admins && siteDefinition.security.admins.length){
+                c.push('view admins');
                 c.push('remove admin'); 
             }
             c.push('add owner');
             if (siteDefinition.security && siteDefinition.security.owners && siteDefinition.security.owners.length){
+                c.push('view owners');
                 c.push('remove owner'); 
             }
             c.push('add member');
             if (siteDefinition.security && siteDefinition.security.members && siteDefinition.security.members.length) {
+                c.push('view members');
                 c.push('remove member');
             }
             c.push('add visitor');
             if (siteDefinition.security && siteDefinition.security.visitors && siteDefinition.security.visitors.length) {
+                c.push('view visitors');
                 c.push('remove visitor');
             }
             c.push('add user group');
             if (siteDefinition.security && siteDefinition.security.groups && siteDefinition.security.groups.length){
+                c.push('view user groups');
                 c.push('edit user group');
                 c.push('remove user group'); 
             }
@@ -34,14 +39,7 @@ module.exports = function configureSecurity(generator,siteDefinition){
         type:'input',
         name:'user', 
         when:(answers)=>{
-            return answers.action !== 'add user group' &&
-                answers.action !== 'remove user group' &&
-                answers.action !== 'edit user group' &&
-                answers.action !== 'remove owner' &&
-                answers.action !== 'remove member' &&
-                answers.action !== 'remove visitor' &&
-                answers.action !== 'remove admin' && 
-                answers.action !== 'back'; 
+            return /add (admin|owner|member|visitor)/.test(answers.action); 
         },
         message:(answers)=>{
             if (answers.action === 'add admin'){
@@ -64,10 +62,7 @@ module.exports = function configureSecurity(generator,siteDefinition){
         type:'list',
         name:'removeUser', 
         when:(answers)=>{
-            return answers.action === 'remove visitor' ||
-                answers.action === 'remove member' ||
-                answers.action === 'remove admin' ||
-                answers.action === 'remove owner'; 
+            return /remove (visitor|member|admin|owner)/.test(answers.action); 
         },
         choices:(answers)=>{
             if (answers.action === 'remove visitor'){
@@ -89,10 +84,56 @@ module.exports = function configureSecurity(generator,siteDefinition){
         },
         when:(answers)=>{
             return answers.action === 'edit user group' ||
-                answers.action === 'remove user group'; 
+                answers.action === 'remove user group';
         },
         choices:()=>{
             return siteDefinition.security.groups.map(e=>e.title); 
+        }
+    },{
+        type:'list',
+        name:'viewLists', 
+        when:(answers)=>{
+            return answers.action === 'view user groups'; 
+        },
+        message:'Here is the list of users groups:',
+        choices:()=>{
+            return siteDefinition.security.groups.map((e)=>e.title); 
+        }
+    },{
+        type:'checkbox',
+        name:'usersList',
+        message:(answers)=>{
+            if (answers.action === 'view admins'){
+                return 'Here is the list of admins:'
+            }else if (answers.action === 'view owners'){
+                return 'Here is the list of owners'; 
+            }else if (answers.action === 'view visitors'){
+                return 'Here is the list of visitors'; 
+            }else if (answers.action === 'view members'){
+                return 'Here is the list of members'; 
+            }
+        },
+        choices:(answers)=>{
+            var users = []
+            if (answers.action === 'view visitors'){
+                users = siteDefinition.security.visitors; 
+            }else if (answers.action === 'view owners'){
+                users = siteDefinition.security.owners; 
+            }else if (answers.action === 'view admins'){
+                users = siteDefinition.security.admins; 
+            }else if (answers.action === 'view members'){
+                users = siteDefinition.security.members; 
+            }
+            return users.map((e)=>{
+                return {
+                    name:e,
+                    value:e,
+                    checked:true
+                };
+            });
+        },
+        when:(answers)=>{
+            return /view (admins|owners|visitors|members)/.test(answers.action); 
         }
     }];
     let action = null; 
@@ -127,6 +168,14 @@ module.exports = function configureSecurity(generator,siteDefinition){
                 siteDefinition.security.owners = siteDefinition.security.owners.filter(e => e !== answers.removeUser); 
             } else if (action === 'remove visitor') {
                 siteDefinition.security.visitors = siteDefinition.security.visitors.filter(e => e !== answers.removeUser);
+            }else if (action === 'view owners'){
+                siteDefinition.security.owners = answers.usersList; 
+            }else if (action === 'view members'){
+                siteDefinition.security.members = answers.usersList; 
+            }else if (action === 'view visitors'){
+                siteDefinition.security.visitors = answers.usersList; 
+            }else if (action === 'view admins'){
+                siteDefinition.security.admins = answers.usersList; 
             }
         })
         .then((e)=>{
