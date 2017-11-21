@@ -7,6 +7,7 @@ const configureTermStore = require('./configuretermstore');
 const configureSecutiry = require('./configuresecurity');
 const configureFeatures = require('./configurefeatures');
 const configureNavigation = require('./configurenavigation');
+const configureCommands = require('./configurecommands'); 
 
 function getDocumentContentTypes(contentType,cTypes,doneTypes,output){
   if (doneTypes[contentType.name]){
@@ -49,7 +50,11 @@ module.exports = function configureSiteDefinition(generator,siteDefinition){
         'configure term store', 
         'configure security',
         'configure features',
-        'configure navigation'];
+        'configure navigation',
+        'set home page',
+        // 'configure commands', 
+        'enable using site collection term group',
+        'disable using site collection term group'];
           var ctypes = getDocTypes(siteDefinition.contentTypes||[]);
           if (ctypes.length > 0){
             c.push('set default pages library content type');
@@ -155,6 +160,17 @@ module.exports = function configureSiteDefinition(generator,siteDefinition){
         siteDefinition.defaultPagesContentType = val; 
         return val; 
       }
+    },{
+      type:'input', 
+      name:'homePage', 
+      message:'What is the URL for the homepage? i.e. Pages/Home.aspx',
+      when:(answers)=>{
+        return answers.action === 'set home page'; 
+      },
+      filter:(val)=>{
+        siteDefinition.homePage = val; 
+        return val; 
+      }
     }];
     var action = null; 
     return generator.prompt(prompts).then((answers)=>{
@@ -185,6 +201,12 @@ module.exports = function configureSiteDefinition(generator,siteDefinition){
         return configureFeatures(generator,siteDefinition); 
       }else if (answers.definitionAction === 'configure navigation'){
         return configureNavigation(generator,siteDefinition); 
+      }else if (answers.definitionAction === 'enable using site collection term group'){
+        siteDefinition.setSiteCollectionTermGroupName = true; 
+      }else if (answrs.definitionAction === 'disable using site collection term group'){
+        siteDefinition.setSiteCollectionTermGroupName = false; 
+      }else if (answers.definitionAction === 'configure commands'){
+        return configureCommands(generator,siteDefinition); 
       }
     })
     .then(()=>{
