@@ -187,6 +187,12 @@ module.exports = class extends Generator {
         this.destinationPath('gulpfile.js')
       );
     }
+    if (!this.fs.exists(this.destinationPath('CodeConventions.md'))) {
+      this.fs.copy(
+        this.templatePath(path.resolve(__dirname, '../../node_modules/sharepoint-util/templates/CodeConventions.md')),
+        this.destinationPath('CodeConventions.md')
+      );
+    }
     if (!this.fs.exists(this.destinationPath('webpack.config.js'))) {
       this.fs.copy(
         this.templatePath(path.resolve(__dirname, '../../node_modules/sharepoint-util/templates/webpack.config.js')),
