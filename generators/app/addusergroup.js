@@ -49,7 +49,7 @@ module.exports = function addUserGroup(generator,siteDefinition,g){
             validate:(val)=>{
                 return val && val.trim()?true:'Please provide a valid description'; 
             },
-            messsage:'What is the description of the user group?', 
+            message:'What is the description of the user group?', 
             when:(answers)=>{
                 return answers.action === 'set group description' || !isEdit; 
             },
@@ -66,7 +66,7 @@ module.exports = function addUserGroup(generator,siteDefinition,g){
             validate: (val) => {
                 return val && val.trim() ? true : 'Please provide a valid description';
             },
-            messsage:'Who is the owner of the use group? please provide an email address example@example.com',
+            message:'Who is the owner of the use group? please provide an email address example@example.com',
             default:()=>{
                 return group.owner; 
             },
@@ -90,6 +90,7 @@ module.exports = function addUserGroup(generator,siteDefinition,g){
         },{
             type:'list',
             name:'memberRemove',
+            message:'Which user do you want to remove?',
             filter:(val)=>{
                 group.members = group.members.filter((e)=>e !== val); 
                 return val; 

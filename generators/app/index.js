@@ -215,7 +215,7 @@ module.exports = class extends Generator {
       );
     }
     
-    if (!this.fs.exists(this.destinationPath('sass'))){
+    if (!this.fs.exists(this.destinationPath(this._cfg.sassDir))){
       this.fs.copy(
         this.templatePath(path.resolve(__dirname,'../../node_modules/sharepoint-util/sass/partials')),
         this.destinationPath(this._cfg.sassDir)
