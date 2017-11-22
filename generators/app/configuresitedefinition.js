@@ -10,6 +10,8 @@ const configureApps = require('./configureapps');
 const configureFeatures = require('./configurefeatures');
 const configureNavigation = require('./configurenavigation');
 const configureCommands = require('./configurecommands'); 
+const configureLocalizations = require('./configureloclization'); 
+const configureComposedLook = require('./configurecomposedlook');
 
 function getDocumentContentTypes(contentType,cTypes,doneTypes,output){
   if (doneTypes[contentType.name]){
@@ -41,7 +43,7 @@ function getDocTypes(contentTypes){
   })
   return output; 
 }
-module.exports = function configureSiteDefinition(generator,siteDefinition){
+module.exports = function configureSiteDefinition(generator,siteDefinition,config){
     const prompts = [{
       type:'list',
       name:'definitionAction',
@@ -53,6 +55,8 @@ module.exports = function configureSiteDefinition(generator,siteDefinition){
         'configure security',
         'configure features',
         'configure navigation',
+        'configure localizations',
+        'configure composed look',
         'set home page',
         'set default page layout', 
         // 'configure commands', 
@@ -275,6 +279,10 @@ module.exports = function configureSiteDefinition(generator,siteDefinition){
         return configureCommands(generator,siteDefinition); 
       }else if (answers.definitionAction === 'configure apps'){
         return configureApps(generator,siteDefinition);
+      }else if (answers.definitionAction === 'configure localizations'){
+        return configureLocalizations(generator,siteDefinition); 
+      }else if (answers.definitionAction === 'configure composed look'){
+        return configureComposedLook(generator,siteDefinition,config);
       }
     })
     .then(()=>{

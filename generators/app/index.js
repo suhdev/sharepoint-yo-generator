@@ -10,6 +10,7 @@ const configureSiteDefinition = require('./configuresitedefinition');
 const configureProject = require('./configureproject');  
 const fs = require('fs'); 
 const cleanSiteDefinition = require('./cleansitedefinition');
+const configureComposedLook = require('./configurecomposedlook');
 const generateDeploymentScripts = require('./deploy');
 const _ = require('lodash'); 
 
@@ -33,9 +34,11 @@ module.exports = class extends Generator {
       distJsDir: this.config.get('distJsDir') || './dist/js',
       bootstrapVersion: this.config.get('bootstrapVersion') || 'v4',
       provisioningDir: this.config.get('provisioningDir') || './deploy',
+      resourcesDir: this.config.get('resourcesDir') || './resources',
       disableNpmDevInstall: this.config.get('disableNpmDevInstall') || false, 
       disableNpmInstall: this.config.get('disableNpmInstall') || false, 
       templatesDir: this.config.get('templatesDir') || './templates',
+      colorPalette:this.config.get('colorPalette') || {},
       version:this.config.get('version') || '1.0.0',
       masterPageTemplatesDir: this.config.get('masterPageTemplatesDir') || './templates/masterpage',
       pageLayoutTemplatesDir: this.config.get('pageLayoutTemplatesDir') || './templates/pagelayouts',
@@ -59,6 +62,8 @@ module.exports = class extends Generator {
       choices:[
         'configure',
         'generate deployment scripts',
+        'create color palette',
+        'create font palette',
         'configure cdn libraries',
         'configure SiteDefinition',
         'nothing']
@@ -81,6 +86,10 @@ module.exports = class extends Generator {
         return this._getLibrary();
       }else if (props.whatAction === 'configure SiteDefinition'){
         return this._configureSiteDefinition(); 
+      }else if (props.whatAction === 'create color palette'){
+        return this._createColorPalette(); 
+      }else if (props.whatAction === 'create font palette'){
+        return this._createFontPalette();
       }
       
     })
@@ -89,6 +98,44 @@ module.exports = class extends Generator {
         this.cfg.cdn = this.libraries; 
       }
     });
+  }
+
+  _createColorPalette(){
+    const prompts = [{
+      type:'input', 
+      name:'name', 
+      validate(val){
+        return val && val.trim()?true:'Please provide a valid file';
+      },
+      message:'What is the name of the color palette file?',
+    }];
+    return this.prompt(prompts)
+      .then((answers)=>{
+        this.fs.copyTpl(this.templatePath(path.resolve(__dirname, '../../node_modules/sharepoint-util/templates/palette.spcolor.ejs')),
+          this.destinationPath(path.resolve(this._cfg.resourcesDir, answers.name.endsWith('.spcolor')?answers.name:answers.name+'.spcolor')),
+          {
+            config:this._cfg
+          });
+      }); 
+  }
+
+  _createFontPalette(){
+    const prompts = [{
+      type:'input', 
+      name:'name', 
+      validate(val){
+        return val && val.trim()?true:'Please provide a valid file';
+      },
+      message:'What is the name of the font palette file?',
+    }];
+    return this.prompt(prompts)
+      .then((answers)=>{
+        this.fs.copyTpl(this.templatePath(path.resolve(__dirname, '../../node_modules/sharepoint-util/templates/default.spfont')),
+          this.destinationPath(path.resolve(this._cfg.resourcesDir, answers.name.endsWith('.spfont')?answers.name:answers.name+'.spfont')),
+          {
+            config:this._cfg
+          });
+      }); 
   }
 
   _generateDeploymentScripts(){
@@ -101,7 +148,7 @@ module.exports = class extends Generator {
     this.siteDefinition.contentTypes = this.siteDefinition.contentTypes || []; 
     this.siteDefinition.lists = this.siteDefinition.lists || []; 
     this.siteDefinition.termGroups = this.siteDefinition.termGroups || [];
-    return configureSiteDefinition(this,this.siteDefinition); 
+    return configureSiteDefinition(this,this.siteDefinition,this._cfg); 
   }
 
   _configureProject(){

@@ -18,6 +18,7 @@ module.exports = function configureProject(generator,defaultConfig){
         'set SharePoint version', 
         'set provisioning directory', 
         'set deployment directory',
+        'set resources directory', 
         'set templates directory', 
         'set master page templates directory',
         'set page layout templates directory', 
@@ -283,8 +284,11 @@ module.exports = function configureProject(generator,defaultConfig){
     },{
         type:'input',
         name:'siteAssetsDrive', 
+        validate(val){
+          return val && val.trim()?true:'Please provide a valid site assets drive';
+        },
         filter: (val) => {
-          defaultConfig.siteAssetsDrive = val;
+          defaultConfig.siteAssetsDrive = val.trim();
           return val;
         },
         message:'What is the drive pointing to the Site Assets library?',
@@ -295,6 +299,22 @@ module.exports = function configureProject(generator,defaultConfig){
           answers.useDefaultMappedDrives &&
           answers.action === 'init') || 
           answers.action === 'set site assets mapped drive';
+        }
+    },{
+        type:'input',
+        name:'resourceDir', 
+        filter: (val) => {
+          defaultConfig.resourcesDir = val.trim();
+          return val;
+        },
+        validate(val){
+          return val && val.trim()?true:'Please provide a valid resources file';
+        },
+        message:'What is the directory for your resources files?',
+        default:'./resources',
+        when(answers){
+          return answers.action === 'init' || 
+          answers.action === 'set resources directory';
         }
     },{
         type:'input',
