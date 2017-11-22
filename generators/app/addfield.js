@@ -14,6 +14,18 @@ const configs = [{
   value: 'required',
   checked:false,
 }, {
+  name: 'Sortable',
+  value:'sortable', 
+  checked:false,
+},{
+  name: 'Sealed',
+  value:'sealed',
+  checked:false,
+},{
+  name:'Filterable',
+  value:'filterable',
+  checked:false,
+},{
   name: 'Multi Field',
   value: 'mult',
   checked:false
@@ -40,10 +52,15 @@ const configs = [{
   when:(field)=>{
     return field.type === 'HTML' || field.type==='Note'; 
   }
+},{
+  name:'Show In List Settings',
+  value:'showInListSettings', 
+  checked:true
 }];
 module.exports = function addField(generator,siteDefinition,f){
   var isEdit = f ? true : false;
   var field = f || {};
+  var settingAction = null;
   
   siteDefinition.fields = siteDefinition.fields || [];
     const prompts = [{
@@ -63,6 +80,13 @@ module.exports = function addField(generator,siteDefinition,f){
         ];
         if (field.type.toLowerCase().indexOf('taxonomy') !== -1 && siteDefinition.termGroups && siteDefinition.termGroups.length){
           c.push('set term store settings');
+        }
+        if (field.type === 'Text' || field.type === "Note" || field.type === "HTML"){
+          c.push('set maximum length');
+        }
+        if (field.type.toLowerCase().indexOf('user') !== -1){
+          c.push('set user selection mode'); 
+          c.push('set user selection scope'); 
         }
         if (field.type === 'DateTime' || field.type === 'Choice' ||
           field.type === 'MultiChoice' || field.type === 'URL'){
@@ -351,19 +375,11 @@ module.exports = function addField(generator,siteDefinition,f){
         return (siteDefinition.lists || []).map((e)=>e.title); 
       }
     },{
-      type:'checkbox',
+      type:'list',
       name:'configs', 
-      message:'Toggle to enable/disable configurations:',
+      message:'Which setting do you want to edit?',
       filter:(val)=>{
-        configs.forEach((e)=>{
-          if (e.when){
-            if (e.when(field)){
-              field[e.value] = val.indexOf(e.value) !== -1;
-            }
-          }else {
-            field[e.value] = val.indexOf(e.value) !== -1;
-          }
-        });
+        settingAction = val; 
         return val;
       },
       choices:()=>{
@@ -380,8 +396,27 @@ module.exports = function addField(generator,siteDefinition,f){
         return c; 
       },
       when:(answers)=>{
-        return answers.action === 'set field settings' ||
-          !isEdit; 
+        return answers.action === 'set field settings';
+      }
+    },{
+      type:'list', 
+      name:'configValue', 
+      message:'settingValue', 
+      default:(answers)=>{
+        return field[answers.configs] || 'n/a'; 
+      },
+      choices:()=>{
+        return ['yes','no','n/a']; 
+      },
+      filter:(val)=>{
+        field[settingAction] = val === 'yes'?true:val === 'no'?false:undefined;
+        return val; 
+      },
+      when:(answers)=>{
+        return answers.configs && answers.action === 'set field settings'; 
+      },
+      default:(answers)=>{
+        return typeof field[answers.configs] === "undefined"?'n/a':field[answers.configs]?'yes':'no';
       }
     },{
       type:'input',
@@ -411,8 +446,7 @@ module.exports = function addField(generator,siteDefinition,f){
         }
       },
       when:(answers)=>{
-        return (!isEdit && (answers.type === 'Number' || 
-          answers.type === 'Integer')) || answers.action === 'set minimum value'; 
+        return answers.action === 'set minimum value'; 
       },
       filter:(val)=>{
         if (val === '-' || val === '' || val == null){
@@ -428,8 +462,7 @@ module.exports = function addField(generator,siteDefinition,f){
       name:'max', 
       message:'What is the maximum value?',
       when:(answers)=>{
-        return (!isEdit && (answers.type === 'Number' || 
-          answers.type === 'Integer')) || answers.action === 'set maximum value'; 
+        return answers.action === 'set maximum value'; 
       },
       default:()=>{
         if (typeof field.max !== "undefined"){
@@ -445,6 +478,60 @@ module.exports = function addField(generator,siteDefinition,f){
         }
       },
       default:'',
+    },{
+      type:'list', 
+      name:'userSelectionMode',
+      message:'What is the user selection mode of the user field?', 
+      when:(answers)=>{
+        return answers.action === 'set user selection mode'; 
+      },
+      default:(val)=>{
+        return field.userSelectionMode || 'PeopleAndGroups'; 
+      },
+      choices:['PeopleOnly','PeopleAndGroups'].map((e,i)=>{
+        return {
+          name:e,
+          value:i
+        };
+      }),
+      filter:(val)=>{
+        field.userSelectionMode = val; 
+        return val; 
+      },
+    },{
+      type:'list',
+      name:'userSelectionScope', 
+      message:'What is the scope of this user field?',
+      when:(answers)=>{
+        return answers.action === 'set user selection scope'; 
+      },
+      default:(val)=>{
+        return field.userSelectionScope || '0'; 
+      },
+      validate:(val)=>{
+        return val && val.trim()?true:'Please provide a valid selection scope';
+      },
+      filter:(val)=>{
+        field.userSelectionScope = val.trim(); 
+        return val; 
+      },
+    },{
+      type:'input', 
+      name:'maxLength', 
+      message:'What is the maximum length of the field?', 
+      when:(answers)=>{
+        return (answers.action === 'set maximum length'); 
+      },
+      validate:(val)=>{
+        return /[0-9]+/.test(val)?true:'Please provide a valid value (numbers only)';
+      },
+      default:()=>{
+        return field.maxLength || 255; 
+      },
+      filter(val){
+        field.maxLength = +val; 
+        return val;
+      }
     }];
   
   return generator.prompt(prompts)
