@@ -136,7 +136,7 @@ module.exports = function addContentType(generator,siteDefinition,c){
         .then((answers)=>{
             action = answers.action; 
             if (!isEdit) {
-                this.siteDefinition.contentTypes.push(contentType);
+                siteDefinition.contentTypes.push(contentType);
             }
         })
         .then(()=>{
