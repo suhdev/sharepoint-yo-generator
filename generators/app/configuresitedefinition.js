@@ -178,7 +178,7 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
       name:'homePage', 
       message:'What is the URL for the homepage? i.e. Pages/Home.aspx',
       when:(answers)=>{
-        return answers.action === 'set home page'; 
+        return answers.definitionAction === 'set home page'; 
       },
       filter:(val)=>{
         siteDefinition.homePage = val.trim(); 
@@ -195,7 +195,7 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
       name:'defaultPageLayout', 
       message:'What is the name of the page layout to set as default? i.e. Test/DefaultLayout.aspx (this internally translates to _catalog/masterpage/Test/DefaultLayout.aspx',
       when:(answers)=>{
-        return answers.action === 'set default page layout'; 
+        return answers.definitionAction === 'set default page layout'; 
       },
       filter:(val)=>{
         return siteDefinition.defaultPageLayout = val.trim(); 
