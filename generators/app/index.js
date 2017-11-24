@@ -42,6 +42,8 @@ module.exports = class extends Generator {
       version:this.config.get('version') || '1.0.0',
       masterPageTemplatesDir: this.config.get('masterPageTemplatesDir') || './templates/masterpage',
       pageLayoutTemplatesDir: this.config.get('pageLayoutTemplatesDir') || './templates/pagelayouts',
+      prototypeTemplatesDir: this.config.get('prototypeTemplatesDir') || './templates/prototypes',
+      prototypeDir:this.config.get('prototypeDir') || './prototype',
       templatesExtraConfig: this.config.get('templatesExtraConfig') || {},
       cdn: this.config.get('cdn') || [],
       env: this.config.get('env') || 'dev',
@@ -263,7 +265,32 @@ module.exports = class extends Generator {
         }
       );
     }
-    console.log(fs.existsSync(path.resolve(this.destinationPath(), this._cfg.sassDir)), path.resolve(this.destinationPath(), this._cfg.sassDir));
+    if (!fs.existsSync(this.destinationPath(this._cfg.srcDir))){
+      this.fs.write(path.resolve(this.destinationPath(this._cfg.srcDir),'.gitkeep'),''); 
+    }
+    if (!fs.existsSync(this.destinationPath(this._cfg.templatesDir))){
+      this.fs.write(path.resolve(this.destinationPath(this._cfg.templatesDir), '.gitkeep'), ''); 
+    }
+    if (!fs.existsSync(this.destinationPath(this._cfg.prototypeDir))) {
+      this.fs.write(path.resolve(this.destinationPath(this._cfg.prototypeDir), '.gitkeep'), '');
+    }
+    if (!fs.existsSync(this.destinationPath(this._cfg.prototypeTemplatesDir))) {
+      this.fs.write(path.resolve(this.destinationPath(this._cfg.prototypeTemplatesDir), '.gitkeep'), '');
+    }
+    if (!fs.existsSync(this.destinationPath(this._cfg.libDir))) {
+      this.fs.write(path.resolve(this.destinationPath(this._cfg.libDir), '.gitkeep'), '');
+    }
+    if (this._cfg.useSharePoint){
+      if (!fs.existsSync(this.destinationPath(this._cfg.masterPageTemplatesDir))){
+        this.fs.write(path.resolve(this._cfg.masterPageTemplatesDir,'.gitkeep'),''); 
+      }
+      if (!fs.existsSync(this.destinationPath(this._cfg.pageLayoutTemplatesDir))) {
+        this.fs.write(path.resolve(this.destinationPath(this._cfg.pageLayoutTemplatesDir), '.gitkeep'), '');
+      }
+      if (!fs.existsSync(path.resolve(this.destinationPath(this._cfg.templatesDir), './partials'))) {
+        this.fs.write(path.resolve(this.destinationPath(this._cfg.templatesDir), './partials/.gitkeep'), '');
+      }
+    }
     if (!fs.existsSync(path.resolve(this.destinationPath(),this._cfg.sassDir))){
       this.fs.copy(
         this.templatePath(path.resolve(__dirname,'../../node_modules/sharepoint-util/sass/partials')),
@@ -288,7 +315,7 @@ module.exports = class extends Generator {
   }
 
   installingDeps() {
-    var depsToInstall = ['lodash', 'react', 'sp-pnp-js', 'bluebird', 'react-dom', this._cfg.bootstrapVersion === 'v3' ? 'bootstrap-sass' : 'bootstrap',
+    var depsToInstall = ['lodash', 'react', 'sp-pnp-js', 'bluebird', 'react-dom', this._cfg.bootstrapVersion === 'v3' ? 'bootstrap-sass' : 'bootstrap^4.0.0-beta.2',
       'strikejs-react@^6.0.0', 'strikejs-router']; 
     var devDepsToInstall = ['typescript', 'webpack',
       'gulp', 'gulp-concat', 'gulp-uglify',

@@ -171,7 +171,7 @@ module.exports = function addField(generator,siteDefinition,f){
         return val; 
       },
       default:(answers)=>{
-        return field.displayName || answers.name;
+        return field.displayName || answers.name.replace(/([a-z])([A-Z])/g, '$1 $2');
       }
     },{
       type:'input',
