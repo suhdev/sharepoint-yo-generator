@@ -9,6 +9,7 @@ const addList = require('./addlist');
 const configureSiteDefinition = require('./configuresitedefinition');
 const configureProject = require('./configureproject');  
 const fs = require('fs'); 
+const configurePrototypes = require('./configureprototypes');
 const cleanSiteDefinition = require('./cleansitedefinition');
 const configureComposedLook = require('./configurecomposedlook');
 const generateDeploymentScripts = require('./deploy');
@@ -68,6 +69,7 @@ module.exports = class extends Generator {
         'create font palette',
         'configure cdn libraries',
         'configure SiteDefinition',
+        'configure prototypes', 
         'nothing']
     }];
     return this.prompt(prompts)
@@ -92,6 +94,8 @@ module.exports = class extends Generator {
         return this._createColorPalette(); 
       }else if (props.whatAction === 'create font palette'){
         return this._createFontPalette();
+      }else if (props.whatAction === 'configure prototypes'){
+        return configurePrototypes(this,this._cfg);
       }
       
     })
@@ -268,6 +272,18 @@ module.exports = class extends Generator {
     if (!fs.existsSync(this.destinationPath(this._cfg.srcDir))){
       this.fs.write(path.resolve(this.destinationPath(this._cfg.srcDir),'.gitkeep'),''); 
     }
+    if (!fs.existsSync(this.destinationPath(this._cfg.srcDir,'components'))) {
+      this.fs.write(path.resolve(this.destinationPath(this._cfg.srcDir,'components'), '.gitkeep'), '');
+    }
+    if (!fs.existsSync(this.destinationPath(this._cfg.srcDir, 'controllers'))) {
+      this.fs.write(path.resolve(this.destinationPath(this._cfg.srcDir,'controllers'), '.gitkeep'), '');
+    }
+    if (!fs.existsSync(this.destinationPath(this._cfg.srcDir, 'services'))) {
+      this.fs.write(path.resolve(this.destinationPath(this._cfg.srcDir,'services'), '.gitkeep'), '');
+    }
+    if (!fs.existsSync(this.destinationPath(this._cfg.srcDir, 'prototypes'))) {
+      this.fs.write(path.resolve(this.destinationPath(this._cfg.srcDir, 'prototypes'), '.gitkeep'), '');
+    }
     if (!fs.existsSync(this.destinationPath(this._cfg.templatesDir))){
       this.fs.write(path.resolve(this.destinationPath(this._cfg.templatesDir), '.gitkeep'), ''); 
     }
@@ -276,6 +292,12 @@ module.exports = class extends Generator {
     }
     if (!fs.existsSync(this.destinationPath(this._cfg.prototypeTemplatesDir))) {
       this.fs.write(path.resolve(this.destinationPath(this._cfg.prototypeTemplatesDir), '.gitkeep'), '');
+    }
+    if (!fs.existsSync(path.resolve(this.destinationPath(this._cfg.prototypeTemplatesDir),'./index.njk'))) {
+      this.fs.copyTpl(this.templatePath(path.resolve(__dirname, '../../node_modules/sharepoint-util/templates/baseprototype.ejs')),
+        path.resolve(this.destinationPath(this._cfg.prototypeTemplatesDir), './index.njk'), {
+          config: this._cfg,
+        });
     }
     if (!fs.existsSync(this.destinationPath(this._cfg.libDir))) {
       this.fs.write(path.resolve(this.destinationPath(this._cfg.libDir), '.gitkeep'), '');
@@ -298,10 +320,28 @@ module.exports = class extends Generator {
       );
     }
     if (!this.fs.exists(this.destinationPath(path.resolve(this._cfg.sassDir, 'main.min.scss')))){
-      this.fs.copyTpl(this.templatePath(path.resolve(__dirname,'../../node_modules/sharepoint-util/templates/main.min.scss.ejs')),
+      this.fs.copyTpl(this.templatePath(path.resolve(__dirname,'../../node_modules/sharepoint-util/sass/main.min.scss')),
         this.destinationPath(path.resolve(this._cfg.sassDir,'main.min.scss')),{
         config:this._cfg
       });
+    }
+    if (!this.fs.exists(this.destinationPath(path.resolve(this._cfg.sassDir, '_settings.scss')))) {
+      this.fs.copyTpl(this.templatePath(path.resolve(__dirname, '../../node_modules/sharepoint-util/sass/_settings.scss')),
+        this.destinationPath(path.resolve(this._cfg.sassDir, '_settings.scss')), {
+          config: this._cfg
+        });
+    }
+    if (!this.fs.exists(this.destinationPath(path.resolve(this._cfg.sassDir, '_siteurl.scss')))) {
+      this.fs.copyTpl(this.templatePath(path.resolve(__dirname, '../../node_modules/sharepoint-util/sass/_siteurl.scss')),
+        this.destinationPath(path.resolve(this._cfg.sassDir, '_siteurl.scss')), {
+          config: this._cfg
+        });
+    }
+    if (!this.fs.exists(this.destinationPath(path.resolve(this._cfg.sassDir, '_bootstrapinclude.scss')))) {
+      this.fs.copyTpl(this.templatePath(path.resolve(__dirname, '../../node_modules/sharepoint-util/templates/bootstrapinclude.scss.ejs')),
+        this.destinationPath(path.resolve(this._cfg.sassDir, '_bootstrapinclude.scss')), {
+          config: this._cfg
+        });
     }
     if (!this.fs.exists(this.destinationPath(path.resolve(this._cfg.sassDir, '_bootstrap.scss')))){
       this.fs.copy(this.templatePath(path.resolve(__dirname, this._cfg.bootstrapVersion === 'v4' ?'../../node_modules/bootstrap/scss/_variables.scss':
@@ -322,6 +362,7 @@ module.exports = class extends Generator {
       'pump', 'cdnjs', 'colors', 'yargs',
       'gulp-data', 'nunjucks', 'request',
       'gulp-nunjucks', 'gulp-sass',
+      'gulp-rename',
       'awesome-typescript-loader',
       '@types/react', '@types/react-dom',
       '@types/lodash', '@types/bluebird',
@@ -337,7 +378,7 @@ module.exports = class extends Generator {
       if (pack.devDependencies){
         var installed = Object.keys(pack.devDependencies); 
         devDepsToInstall = devDepsToInstall.filter((e)=>{
-          return installed.indexOf(e) !== -1; 
+          return installed.indexOf(e) === -1; 
         });
       }
     }
