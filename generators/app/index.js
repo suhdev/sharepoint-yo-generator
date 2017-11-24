@@ -40,7 +40,7 @@ module.exports = class extends Generator {
       templatesDir: this.config.get('templatesDir') || './templates',
       colorPalette:this.config.get('colorPalette') || {},
       version:this.config.get('version') || '1.0.0',
-      masterPageTemplatesDir: this.config.get('masterPageTemplatesDir') || './templates/masterpage',
+      masterPageTemplatesDir: this.config.get('masterPageTemplatesDir') || './templates/masterpages',
       pageLayoutTemplatesDir: this.config.get('pageLayoutTemplatesDir') || './templates/pagelayouts',
       prototypeTemplatesDir: this.config.get('prototypeTemplatesDir') || './templates/prototypes',
       prototypeDir:this.config.get('prototypeDir') || './prototype',
