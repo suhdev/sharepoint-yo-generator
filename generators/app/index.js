@@ -315,7 +315,7 @@ module.exports = class extends Generator {
   }
 
   installingDeps() {
-    var depsToInstall = ['lodash', 'react', 'sp-pnp-js', 'bluebird', 'react-dom', this._cfg.bootstrapVersion === 'v3' ? 'bootstrap-sass' : 'bootstrap^4.0.0-beta.2',
+    var depsToInstall = ['lodash', 'react', 'sp-pnp-js', 'bluebird', 'react-dom', this._cfg.bootstrapVersion === 'v3' ? 'bootstrap-sass' : 'bootstrap@^4.0.0-beta.2',
       'strikejs-react@^6.0.0', 'strikejs-router']; 
     var devDepsToInstall = ['typescript', 'webpack',
       'gulp', 'gulp-concat', 'gulp-uglify',
@@ -351,7 +351,10 @@ module.exports = class extends Generator {
 
   install() {
     if (!this._cfg.disableNpmDevInstall || !this._cfg.disableNpmInstall){
-      this.installDependencies();
+      this.installDependencies({
+        npm:true,
+        bower:false,
+      });
 
     }
   }
