@@ -358,7 +358,7 @@ module.exports = class extends Generator {
     var depsToInstall = ['lodash', 'react', 'sp-pnp-js', 'bluebird', 'react-dom', this._cfg.bootstrapVersion === 'v3' ? 'bootstrap-sass' : 'bootstrap@^4.0.0-beta.2',
       'strikejs-react@^6.0.0', 'strikejs-router']; 
     var devDepsToInstall = ['typescript', 'webpack',
-      'gulp', 'gulp-concat', 'gulp-uglify',
+      'gulp', 'gulp-concat', 'gulp-uglify', 'gulp-autoprefixer',
       'pump', 'cdnjs', 'colors', 'yargs',
       'gulp-data', 'nunjucks', 'request',
       'gulp-nunjucks', 'gulp-sass',
