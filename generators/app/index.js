@@ -362,7 +362,7 @@ module.exports = class extends Generator {
       'pump', 'cdnjs', 'colors', 'yargs',
       'gulp-data', 'nunjucks', 'request',
       'gulp-nunjucks', 'gulp-sass',
-      'gulp-rename',
+      'gulp-rename','express','serve-static',
       'awesome-typescript-loader',
       '@types/react', '@types/react-dom',
       '@types/lodash', '@types/bluebird',

@@ -1,6 +1,6 @@
 {
   "name": "generator-sharepoint-app",
-  "version": "0.0.24",
+  "version": "0.0.25",
   "description": "A yeoman generator for SharePoint projects",
   "homepage": "",
   "author": {
