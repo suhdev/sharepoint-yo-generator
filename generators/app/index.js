@@ -3,17 +3,18 @@ const Generator = require('yeoman-generator');
 const chalk = require('chalk');
 const yosay = require('yosay');
 const path = require('path');
+const fs = require('fs');
 const addField = require('./addfield');
 const addContentType = require('./addcontenttype');
 const addList = require('./addlist');
 const configureSiteDefinition = require('./configuresitedefinition');
 const configureProject = require('./configureproject');
-const fs = require('fs');
 const configurePrototypes = require('./configureprototypes');
-const cleanSiteDefinition = require('./cleansitedefinition');
 const configureComposedLook = require('./configurecomposedlook');
 const configureSource = require('./configuresource');
 const generateDeploymentScripts = require('./deploy');
+const cleanSiteDefinition = require('./cleansitedefinition');
+const initial = require('./initial');
 const _ = require('lodash');
 
 module.exports = class extends Generator {
@@ -24,6 +25,7 @@ module.exports = class extends Generator {
       name: this.config.get('name') || 'test-project',
       url: this.config.get('url') || 'test-site',
       assetsDir: this.config.get('assetsDir') || './assets',
+      description:this.config.get('description') || '',
       libDir: this.config.get('libDir') || './lib',
       useSharePoint: this.config.get('useSharePoint') || true,
       sharePointVersion: this.config.get('sharePointVersion') || 'online',
@@ -60,216 +62,7 @@ module.exports = class extends Generator {
     this.log(
       yosay('Welcome to the super-duper ' + chalk.red('generator-sysdoc') + ' generator!')
     );
-
-    const prompts = [
-      {
-        type: 'list',
-        name: 'whatAction',
-        message: 'What would you like to do?',
-        default: 'configure',
-        choices: [
-          'configure',
-          'generate deployment scripts',
-          'create color palette',
-          'create font palette',
-          'configure cdn libraries',
-          'configure SiteDefinition',
-          'configure source',
-          'configure prototypes',
-          'nothing'
-        ]
-      }
-    ];
-    return this.prompt(prompts)
-      .then(props => {
-        var siteDefinitionExists = fs.existsSync(
-          this.destinationPath('SiteDefinition.json')
-        );
-        if (this.config.get('useSharePoint') || siteDefinitionExists) {
-          if (siteDefinitionExists) {
-            this.siteDefinition = require(this.destinationPath('SiteDefinition.json'));
-          } else {
-            this.siteDefinition = require('sharepoint-util/templates/SiteDefinition');
-          }
-        }
-        if (props.whatAction === 'generate deployment scripts') {
-          return this._generateDeploymentScripts();
-        } else if (props.whatAction === 'configure') {
-          return this._configureProject();
-        } else if (props.whatAction === 'configure cdn libraries') {
-          return this._getLibrary();
-        } else if (props.whatAction === 'configure SiteDefinition') {
-          return this._configureSiteDefinition();
-        } else if (props.whatAction === 'create color palette') {
-          return this._createColorPalette();
-        } else if (props.whatAction === 'create font palette') {
-          return this._createFontPalette();
-        } else if (props.whatAction === 'configure prototypes') {
-          return configurePrototypes(this, this._cfg);
-        } else if (props.whatAction === 'configure source') {
-          return configureSource(this, this._cfg);
-        }
-      })
-      .then(() => {
-        if (this.libraries.length) {
-          this.cfg.cdn = this.libraries;
-        }
-      });
-  }
-
-  _createColorPalette() {
-    const prompts = [
-      {
-        type: 'input',
-        name: 'name',
-        validate(val) {
-          return val && val.trim() ? true : 'Please provide a valid file';
-        },
-        message: 'What is the name of the color palette file?'
-      }
-    ];
-    return this.prompt(prompts).then(answers => {
-      this.fs.copyTpl(
-        this.templatePath(
-          path.resolve(
-            __dirname,
-            '../../node_modules/sharepoint-util/templates/palette.spcolor.ejs'
-          )
-        ),
-        this.destinationPath(
-          path.resolve(
-            this._cfg.resourcesDir,
-            answers.name.endsWith('.spcolor') ? answers.name : answers.name + '.spcolor'
-          )
-        ),
-        {
-          config: this._cfg
-        }
-      );
-    });
-  }
-
-  _createFontPalette() {
-    const prompts = [
-      {
-        type: 'input',
-        name: 'name',
-        validate(val) {
-          return val && val.trim() ? true : 'Please provide a valid file';
-        },
-        message: 'What is the name of the font palette file?'
-      }
-    ];
-    return this.prompt(prompts).then(answers => {
-      this.fs.copyTpl(
-        this.templatePath(
-          path.resolve(
-            __dirname,
-            '../../node_modules/sharepoint-util/templates/default.spfont'
-          )
-        ),
-        this.destinationPath(
-          path.resolve(
-            this._cfg.resourcesDir,
-            answers.name.endsWith('.spfont') ? answers.name : answers.name + '.spfont'
-          )
-        ),
-        {
-          config: this._cfg
-        }
-      );
-    });
-  }
-
-  _generateDeploymentScripts() {
-    return generateDeploymentScripts(this, this.siteDefinition, this._cfg);
-  }
-
-  _configureSiteDefinition() {
-    this.siteDefinition = this.siteDefinition || {};
-    this.siteDefinition.fields = this.siteDefinition.fields || [];
-    this.siteDefinition.contentTypes = this.siteDefinition.contentTypes || [];
-    this.siteDefinition.lists = this.siteDefinition.lists || [];
-    this.siteDefinition.termGroups = this.siteDefinition.termGroups || [];
-    return configureSiteDefinition(this, this.siteDefinition, this._cfg);
-  }
-
-  _configureProject() {
-    return configureProject(this, this._cfg).then(answers => {
-      this.config.set(this._cfg);
-      this.config.save();
-    });
-  }
-
-  _getLibrary() {
-    let packages = [];
-    this.libraries = this.libraries || [];
-    let library = null;
-    const libraryPrompts = [
-      {
-        type: 'list',
-        name: 'cdnAction',
-        message: 'Do you want to add libraries from cdn?',
-        choices: ['add a library', 'Remove all libraries', 'Continue'],
-        default: 'Continue'
-      },
-      {
-        type: 'input',
-        name: 'cdnLibrary',
-        message: 'What is the library name?',
-        default: 'jquery',
-        when: answers => {
-          return answers.cdnAction === 'add a library';
-        }
-      }
-      // {
-      //   type:'list',
-      //   name:'libraryName',
-      //   message:'Available libraries matching your search:',
-      //   choices:(answers)=>{
-      //     return new Promise((res)=>{
-      //       cdnjs.search(answers.cdnLibrary,(err,pkgs)=>{
-      //         if (err){
-      //           res([]);
-      //           return;
-      //         }
-      //         packages = pkgs;
-      //         res(pkgs.map(e=>e.name));
-      //       });
-      //     });
-      //   },
-      //   when:(answers)=>{
-      //     return answers.cdnValue === 'Add library';
-      //   }
-      // },
-      // {
-      //   type:'list',
-      //   name:'libraryVersion',
-      //   message:(answers)=>{
-      //     return `Available versions for ${answers.libraryName}`
-      //   },
-      //   choices:(answers)=>{
-      //     return new Promise((res)=>{
-      //       library = packages.find((e)=>e.name=== answers.libraryName);
-      //       return res(_.map((library && library.versions) || {},(e,k)=>{
-      //         return k;
-      //       }));
-      //     });
-      //   },
-      //   when:(answers)=>{
-      //     return answers.cdnValue === 'Add library';
-      //   }
-      // }
-    ];
-
-    return this.prompt(libraryPrompts).then(answers => {
-      if (answers.cdnAction === 'add a library') {
-        this.libraries.push(answers.cdnLibrary);
-        this._cfg.cdn.push(answers.cdnLibrary);
-        // This.libraries.push(library.versions[answers.libraryVersion]);
-        return this.prompt(libraryPrompts);
-      }
-    });
+    return initial(this,this._cfg);
   }
 
   writing() {
@@ -551,8 +344,6 @@ module.exports = class extends Generator {
       'request',
       'gulp-nunjucks',
       'gulp-sass',
-      'gulp-gzip',
-      'gulp-tar',
       'gulp-rename',
       'express',
       'serve-static',

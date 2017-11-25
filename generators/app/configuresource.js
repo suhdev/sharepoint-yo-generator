@@ -85,8 +85,8 @@ module.exports = function configureSource(generator,config){
                 if (answers.createPrototype){
                     return addPrototype(generator,config,{
                         name:componentName,
-                        type:'component', 
-                    });
+                        type:'component'
+                    },true);
                 }
             }else if (answers.action === 'add controller'){
                 generator.fs.copyTpl(
@@ -152,8 +152,8 @@ module.exports = function configureSource(generator,config){
                 if (answers.createPrototype) {
                     return addPrototype(generator, config, {
                         name: componentName,
-                        type: 'controller', 
-                    });
+                        type: 'controller'
+                    },true);
                 }
             }else if (action === 'add service'){
                 generator.fs.copyTpl(

@@ -12,6 +12,8 @@ const configureNavigation = require('./configurenavigation');
 const configureCommands = require('./configurecommands'); 
 const configureLocalizations = require('./configureloclization'); 
 const configureComposedLook = require('./configurecomposedlook');
+const configureFontPalette = require('./configurefontpalette');
+const configureColorPalette = require('./configurecolorpalette');
 
 function getDocumentContentTypes(contentType,cTypes,doneTypes,output){
   if (doneTypes[contentType.name]){
@@ -46,7 +48,7 @@ function getDocTypes(contentTypes){
 module.exports = function configureSiteDefinition(generator,siteDefinition,config){
     const prompts = [{
       type:'list',
-      name:'definitionAction',
+      name:'action',
       message:'What do you want to do?',
       choices:()=>{
         var c = [
@@ -57,6 +59,8 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
         'configure navigation',
         'configure localizations',
         'configure composed look',
+        'configure font palette',
+        'configure color palette',
         'set home page',
         'set default page layout', 
         // 'configure commands', 
@@ -98,7 +102,7 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
         return ['New',...siteDefinition.fields.map((e)=>e.name)]; 
       },
       when:(answers)=>{
-        return answers.definitionAction === 'edit a field'; 
+        return answers.action === 'edit a field'; 
       }
     },{
       type:'list',
@@ -111,7 +115,7 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
         return ['New',...siteDefinition.contentTypes.map((e)=>e.name)]; 
       },
       when:(answers)=>{
-        return answers.definitionAction === 'edit a content type';
+        return answers.action === 'edit a content type';
       }
     },{
       type:'list',
@@ -124,7 +128,7 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
         return ['New',...siteDefinition.lists.map((e)=>e.title)]; 
       },
       when:(answers)=>{
-        return answers.definitionAction === 'edit a list';
+        return answers.action === 'edit a list';
       }
     },{
       type:'list',
@@ -140,7 +144,7 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
         return val;
       },
       when:(answers)=>{
-        return answers.definitionAction === 'remove a field'; 
+        return answers.action === 'remove a field'; 
       }
     },{
       type:'list',
@@ -155,7 +159,7 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
         });
       },
       when:(answers)=>{
-        return answers.definitionAction === 'remove a content type'; 
+        return answers.action === 'remove a content type'; 
       }
     },{
       type:'list',
@@ -167,7 +171,7 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
         });
       },
       when:(answers)=>{
-        return answers.definitionAction === 'set default pages library content type';
+        return answers.action === 'set default pages library content type';
       },
       filter:(val)=>{
         siteDefinition.defaultPagesContentType = val; 
@@ -178,7 +182,7 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
       name:'homePage', 
       message:'What is the URL for the homepage? i.e. Pages/Home.aspx',
       when:(answers)=>{
-        return answers.definitionAction === 'set home page'; 
+        return answers.action === 'set home page'; 
       },
       filter:(val)=>{
         siteDefinition.homePage = val.trim(); 
@@ -195,7 +199,7 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
       name:'defaultPageLayout', 
       message:'What is the name of the page layout to set as default? i.e. Test/DefaultLayout.aspx (this internally translates to _catalog/masterpage/Test/DefaultLayout.aspx',
       when:(answers)=>{
-        return answers.definitionAction === 'set default page layout'; 
+        return answers.action === 'set default page layout'; 
       },
       filter:(val)=>{
         return siteDefinition.defaultPageLayout = val.trim(); 
@@ -239,50 +243,54 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
         return apps;
       },
       when:(answers)=>{
-        return answers.definitionAction === 'refresh sharepoint apps list'; 
+        return answers.action === 'refresh sharepoint apps list'; 
       }
     }];
     var action = null; 
     return generator.prompt(prompts).then((answers)=>{
-      action = answers.definitionAction; 
-      if (answers.definitionAction === 'validate') {
+      action = answers.action; 
+      if (answers.action === 'validate') {
         return cleanSiteDefinition(generator,siteDefinition);
-      } else if (answers.definitionAction === 'configure term store'){
+      } else if (answers.action === 'configure term store'){
         return configureTermStore(generator,siteDefinition);
-      }else if (answers.definitionAction === 'add a field' ||
-        (answers.definitionAction === 'edit a field' && answers.fieldName === 'New')) {
+      }else if (answers.action === 'add a field' ||
+        (answers.action === 'edit a field' && answers.fieldName === 'New')) {
         return addField(generator,siteDefinition);
-      } else if (answers.definitionAction === 'edit a field') {
+      } else if (answers.action === 'edit a field') {
         return addField(generator, siteDefinition, siteDefinition.fields.find((e) => e.name === answers.fieldName));
-      } else if (answers.definitionAction === 'add a content type' || (
-        answers.definitionAction === 'edit a content type' &&
+      } else if (answers.action === 'add a content type' || (
+        answers.action === 'edit a content type' &&
         answers.contentTypeName === 'New')) {
         return addContentType(generator,siteDefinition);
-      } else if (answers.definitionAction === 'edit a content type') {
+      } else if (answers.action === 'edit a content type') {
         return addContentType(generator,siteDefinition,siteDefinition.contentTypes.find((e) => e.name === answers.contentTypeName));
-      } else if (answers.definitionAction === 'add a list' || (
-        answers.definitionAction === 'edit a list' && answers.listTitle === 'New')) {
+      } else if (answers.action === 'add a list' || (
+        answers.action === 'edit a list' && answers.listTitle === 'New')) {
         return addList(generator,siteDefinition);
-      } else if (answers.definitionAction === 'edit a list') {
+      } else if (answers.action === 'edit a list') {
         return addList(generator,siteDefinition,siteDefinition.lists.find((e) => e.title === answers.listTitle));
-      } else if (answers.definitionAction === 'configure security'){
+      } else if (answers.action === 'configure security'){
         return configureSecutiry(generator,siteDefinition);
-      }else if (answers.definitionAction === 'configure features'){
+      }else if (answers.action === 'configure features'){
         return configureFeatures(generator,siteDefinition); 
-      }else if (answers.definitionAction === 'configure navigation'){
+      }else if (answers.action === 'configure navigation'){
         return configureNavigation(generator,siteDefinition); 
-      }else if (answers.definitionAction === 'enable using site collection term group'){
+      }else if (answers.action === 'enable using site collection term group'){
         siteDefinition.setSiteCollectionTermGroupName = true; 
-      }else if (answers.definitionAction === 'disable using site collection term group'){
+      }else if (answers.action === 'disable using site collection term group'){
         siteDefinition.setSiteCollectionTermGroupName = false; 
-      }else if (answers.definitionAction === 'configure commands'){
+      }else if (answers.action === 'configure commands'){
         return configureCommands(generator,siteDefinition); 
-      }else if (answers.definitionAction === 'configure apps'){
+      }else if (answers.action === 'configure apps'){
         return configureApps(generator,siteDefinition);
-      }else if (answers.definitionAction === 'configure localizations'){
+      }else if (answers.action === 'configure localizations'){
         return configureLocalizations(generator,siteDefinition); 
-      }else if (answers.definitionAction === 'configure composed look'){
+      }else if (answers.action === 'configure composed look'){
         return configureComposedLook(generator,siteDefinition,config);
+      }else if (answers.action === 'configure color palette'){
+        return configureColorPalette(generator,config,siteDefinition); 
+      }else if (answers.action === 'configure font palette') {
+        return configureFontPalette(generator,config,siteDefinition);
       }
     })
     .then(()=>{

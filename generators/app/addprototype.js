@@ -3,8 +3,8 @@ const fs = require('fs');
 function fileNameWithoutExtension(filename){
     return path.basename(filename,path.extname(filename))
 }
-module.exports = function addPrototype(generator,config,p){
-    var isEdit = p && p.type !== 'controller' && p.type !== 'component'?true:false; 
+module.exports = function addPrototype(generator,config,p,isNew){
+    var isEdit = p?true:false; 
     let sourceFiles = [];
     try{
         var fsExists = fs.existsSync(path.resolve(generator.destinationPath(config.srcDir), './prototypes'));
@@ -28,10 +28,10 @@ module.exports = function addPrototype(generator,config,p){
             name:'action', 
             message:'What would you like to do next?',
             choices(){
-                return ['set name','set description','set typescript source file']; 
+                return ['set name','set description','set subtitle','set typescript source file','set status']; 
             },
             when(){
-                return isEdit; 
+                return isEdit && !isNew; 
             }
         },
         {
@@ -49,7 +49,7 @@ module.exports = function addPrototype(generator,config,p){
                 return pr.name || 'Prototype 1'; 
             },
             when(answers){
-                return answers.action === 'set name' || !isEdit; 
+                return answers.action === 'set name' || !isEdit || isNew; 
             }
         },{
             type:'input', 
@@ -72,6 +72,9 @@ module.exports = function addPrototype(generator,config,p){
             },
             default:()=>{
                 return pr.fileName || (pr.name && pr.name.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().replace(/[\s]+/g,'-')+'.njk'); 
+            },
+            when(answers) {
+                return answers.action === 'set file name' || !isEdit || isNew;
             }
         },{
             type:'input',
@@ -88,7 +91,24 @@ module.exports = function addPrototype(generator,config,p){
                 return pr.description || `Description for ${pr.name}`;
             },
             when(answers) {
-                return answers.action === 'set description' || !isEdit;
+                return answers.action === 'set description' || !isEdit || isNew;
+            }
+        }, {
+            type: 'input',
+            name: 'subtitle',
+            message: "What is the subtitle of the prototype?",
+            filter(val) {
+                pr.subtitle = val.trim();
+                return val;
+            },
+            validate(val) {
+                return val && val.trim() ? true : 'Please provide a valid subtitle';
+            },
+            default(val) {
+                return pr.subtitle || `Subtitle for ${pr.name}`;
+            },
+            when(answers) {
+                return answers.action === 'set subtitle' || !isEdit || isNew;
             }
         },
         {
@@ -106,12 +126,27 @@ module.exports = function addPrototype(generator,config,p){
             when(answers) {
                 return answers.action === 'set typescript source file' && isEdit;
             }
+        },{
+            type:'list', 
+            name:'status', 
+            filter(val){
+                pr.status = val; 
+                return val; 
+            },
+            choices(){
+                return ['Pending','In Progress','Done']
+            },
+            message:'What is the status of the prototype?',
+            when(answers){
+                return !isEdit || answers.action === 'set status' || isNew;
+            }
         }
     ];
     return generator.prompt(prompts)
         .then((answers)=>{
             pr.srcFile = fileNameWithoutExtension(pr.fileName)+'.tsx';
-            pr.baseName = path.basename(pr.fileName, path.extname(pr.fileName)); 
+            pr.baseName = path.basename(pr.fileName, path.extname(pr.fileName));
+            delete pr.isNew; 
             if (!isEdit || !fs.existsSync(generator.destinationPath(config.prototypeTemplatesDir, fileNameWithoutExtension(pr.fileName), pr.fileName))){
                 generator.fs.copyTpl(
                     path.resolve(__dirname, '../../node_modules/sharepoint-util/templates/prototype.ejs'),

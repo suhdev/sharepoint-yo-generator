@@ -1,4 +1,5 @@
 module.exports = function configureProject(generator,defaultConfig){
+  console.log(defaultConfig);
     const prompts = [{
       type:'list',
       name:'action',
@@ -6,6 +7,7 @@ module.exports = function configureProject(generator,defaultConfig){
       choices:()=>{
         var c = ['init',
         'set name',
+        'set description',
         'set version',
         'set assets directory',
         'set lib directory',
@@ -40,14 +42,34 @@ module.exports = function configureProject(generator,defaultConfig){
       message: 'What is the project name, this should be lower case and no spaces?',
       default: defaultConfig.name,
       filter:(val)=>{
-        defaultConfig.name = val; 
+        defaultConfig.name = val.trim().replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
         return val; 
       },
       when:(answers)=>{
         return answers.action === 'init' ||
           answers.action === 'set name';
+      },
+      validate(val){
+        return val && val.trim()?true:'Please provide a valid name'; 
+        return val; 
       }
-    },{
+      }, {
+        type: 'input',
+        name: 'description',
+        message: 'What is the description of the project?',
+        default: ()=>{
+          console.log(defaultConfig.description);
+          return defaultConfig.description;
+        },
+        filter: (val) => {
+          defaultConfig.description = val;
+          return val;
+        },
+        when: (answers) => {
+          return answers.action === 'init' ||
+            answers.action === 'set description';
+        }
+      },{
       type:'input', 
       name:'version', 
       message:'What is the version number of the project?', 
@@ -349,9 +371,10 @@ module.exports = function configureProject(generator,defaultConfig){
           answers.action == 'set bootstrap version';
       }
     }]; 
-
+    let action = null; 
     return generator.prompt(prompts)
       .then((answers)=>{
+        action = answers.action; 
         if (answers.action === 'disable npm install --save-dev'){
           defaultConfig.disableNpmDevInstall = true; 
         }else if (answers.action === 'enable npm install --save-dev') {
@@ -363,8 +386,10 @@ module.exports = function configureProject(generator,defaultConfig){
         }
         generator.config.set(defaultConfig);
         generator.config.save();
-        if (answers.action !== 'back' && answers.action !== 'init'){
-          return configureProject(generator,defaultConfig);
+      })
+      .then(()=>{
+        if (action !== 'back' && action !== 'init') {
+          return configureProject(generator, defaultConfig);
         }
       })
 }
