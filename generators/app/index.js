@@ -12,6 +12,7 @@ const fs = require('fs');
 const configurePrototypes = require('./configureprototypes');
 const cleanSiteDefinition = require('./cleansitedefinition');
 const configureComposedLook = require('./configurecomposedlook');
+const configureSource = require('./configuresource'); 
 const generateDeploymentScripts = require('./deploy');
 const _ = require('lodash'); 
 
@@ -69,6 +70,7 @@ module.exports = class extends Generator {
         'create font palette',
         'configure cdn libraries',
         'configure SiteDefinition',
+        'configure source', 
         'configure prototypes', 
         'nothing']
     }];
@@ -96,6 +98,8 @@ module.exports = class extends Generator {
         return this._createFontPalette();
       }else if (props.whatAction === 'configure prototypes'){
         return configurePrototypes(this,this._cfg);
+      }else if (props.whatAction === 'configure source'){
+        return configureSource(this,this._cfg);
       }
       
     })

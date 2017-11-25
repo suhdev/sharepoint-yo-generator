@@ -4,8 +4,8 @@ function fileNameWithoutExtension(filename){
     return path.basename(filename,path.extname(filename))
 }
 module.exports = function addPrototype(generator,config,p){
-    var isEdit = p?true:false; 
-    const sourceFiles = [];
+    var isEdit = p && p.type !== 'controller' && p.type !== 'component'?true:false; 
+    let sourceFiles = [];
     try{
         var fsExists = fs.existsSync(path.resolve(generator.destinationPath(config.srcDir), './prototypes'));
         if (!fsExists){
@@ -123,8 +123,24 @@ module.exports = function addPrototype(generator,config,p){
                 './prototypes', fileNameWithoutExtension(pr.fileName)+'.tsx')) && 
                 (!fs.existsSync(path.resolve(generator.destinationPath(config.srcDir), './prototypes',
                     fileNameWithoutExtension(pr.fileName) + '.ts'))))) {
-                generator.fs.write(path.resolve(generator.destinationPath(config.srcDir), './prototypes',
-                    fileNameWithoutExtension(pr.fileName) + '.tsx'),'');
+                if (pr.type === 'controller'){
+                    generator.fs.copyTpl(
+                        path.resolve(__dirname, '../../node_modules/sharepoint-util/templates/controllerprototype.njk.ejs'),
+                        path.resolve(generator.destinationPath(config.srcDir), './prototypes',
+                            fileNameWithoutExtension(pr.fileName) + '.tsx'), {
+                            component: pr
+                        });    
+                }else if (pr.type === 'component'){
+                    generator.fs.copyTpl(
+                        path.resolve(__dirname, '../../node_modules/sharepoint-util/templates/componentprototype.njk.ejs'),
+                        path.resolve(generator.destinationPath(config.srcDir), './prototypes',
+                            fileNameWithoutExtension(pr.fileName) + '.tsx'), {
+                                component:pr
+                            });    
+                }else {
+                    generator.fs.write(path.resolve(generator.destinationPath(config.srcDir), './prototypes',
+                        fileNameWithoutExtension(pr.fileName) + '.tsx'),'');
+                }
             }
             if (!isEdit || (!fs.existsSync(path.resolve(generator.destinationPath(config.sassDir),
                 './prototypes', fileNameWithoutExtension(pr.fileName) + '.scss')))) {
