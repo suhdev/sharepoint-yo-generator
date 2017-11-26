@@ -47,10 +47,7 @@ module.exports = function configureProject(generator, defaultConfig) {
       message: 'What is the project title?',
       default: defaultConfig.title,
       filter: val => {
-        defaultConfig.title = val
-          .trim()
-          .replace(/([a-z])([A-Z])/g, '$1-$2')
-          .toLowerCase();
+        defaultConfig.title = val.trim();
         return val;
       },
       when: answers => {
