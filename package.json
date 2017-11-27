@@ -1,6 +1,6 @@
 {
   "name": "generator-sharepoint-app",
-  "version": "0.0.33",
+  "version": "0.0.34",
   "description": "A yeoman generator for SharePoint projects",
   "homepage": "",
   "author": {
@@ -40,7 +40,7 @@
   "scripts": {
     "prepublish": "nsp check",
     "pretest": "eslint .",
-    "precommit": "lint-staged",
+    
     "test": "jest"
   },
   "lint-staged": {

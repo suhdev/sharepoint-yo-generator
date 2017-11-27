@@ -1,5 +1,4 @@
 module.exports = function configureProject(generator, defaultConfig) {
-  console.log(defaultConfig);
   const prompts = [
     {
       type: 'list',
@@ -20,6 +19,7 @@ module.exports = function configureProject(generator, defaultConfig) {
           'set dist CSS directory',
           'set dist JS directory',
           'set use SharePoint',
+          'set use mobx',
           'set SharePoint version',
           'set provisioning directory',
           'set deployment directory',
@@ -91,7 +91,6 @@ module.exports = function configureProject(generator, defaultConfig) {
       name: 'description',
       message: 'What is the description of the project?',
       default: () => {
-        console.log(defaultConfig.description);
         return defaultConfig.description;
       },
       filter: val => {
@@ -100,6 +99,21 @@ module.exports = function configureProject(generator, defaultConfig) {
       },
       when: answers => {
         return answers.action === 'init' || answers.action === 'set description';
+      }
+    },
+    {
+      type: 'confirm',
+      name: 'useMobx',
+      message: 'Do you want to use mobx?',
+      default: () => {
+        return defaultConfig.mobx || true;
+      },
+      filter(val) {
+        defaultConfig.useMobx = val;
+        return val;
+      },
+      when(answers) {
+        return answers.action === 'init' || answers.action === 'set use mobx';
       }
     },
     {

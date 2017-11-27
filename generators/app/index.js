@@ -25,7 +25,7 @@ module.exports = class extends Generator {
       name: this.config.get('name') || 'test-project',
       url: this.config.get('url') || 'test-site',
       assetsDir: this.config.get('assetsDir') || './assets',
-      description:this.config.get('description') || '',
+      description: this.config.get('description') || '',
       libDir: this.config.get('libDir') || './lib',
       useSharePoint: this.config.get('useSharePoint') || true,
       sharePointVersion: this.config.get('sharePointVersion') || 'online',
@@ -43,6 +43,7 @@ module.exports = class extends Generator {
       disableNpmInstall: this.config.get('disableNpmInstall') || false,
       templatesDir: this.config.get('templatesDir') || './templates',
       colorPalette: this.config.get('colorPalette') || {},
+      useMobx: this.config.get('useMobx') || {},
       version: this.config.get('version') || '1.0.0',
       masterPageTemplatesDir:
         this.config.get('masterPageTemplatesDir') || './templates/masterpages',
@@ -62,7 +63,7 @@ module.exports = class extends Generator {
     this.log(
       yosay('Welcome to the super-duper ' + chalk.red('generator-sysdoc') + ' generator!')
     );
-    return initial(this,this._cfg);
+    return initial(this, this._cfg);
   }
 
   writing() {
@@ -324,10 +325,13 @@ module.exports = class extends Generator {
       'sp-pnp-js',
       'bluebird',
       'react-dom',
-      this._cfg.bootstrapVersion === 'v3' ? 'bootstrap-sass' : 'bootstrap@^4.0.0-beta.2',
-      'strikejs-react@^6.0.0',
-      'strikejs-router'
+      this._cfg.bootstrapVersion === 'v3' ? 'bootstrap-sass' : 'bootstrap@^4.0.0-beta.2'
     ];
+    if (this._cfg.useMobx) {
+      depsToInstall.push('mobx', 'mobx-react');
+    } else {
+      depsToInstall.push('strikejs-react');
+    }
     var devDepsToInstall = [
       'typescript',
       'webpack',
