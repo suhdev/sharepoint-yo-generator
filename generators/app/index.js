@@ -344,6 +344,8 @@ module.exports = class extends Generator {
       'colors',
       'yargs',
       'gulp-data',
+      'gulp-gzip',
+      'gulp-tar',
       'nunjucks',
       'request',
       'gulp-nunjucks',
