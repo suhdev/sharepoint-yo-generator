@@ -8,11 +8,12 @@ module.exports = function(generator,siteDefinition,config){
             return config.spHost; 
         },
         filter:(val)=>{
-            cfg.spHost = val;
+            cfg.spHost = val.trim();
+            config.spHost = val.trim(); 
             return val;  
         },
         validate:(val)=>{
-            return val && val.trim()?true:false; 
+            return val && val.trim()?true:'Please provide a valid spHost'; 
         },
         message:'Please enter the SharePoint host (spHost) e.g https://contoso.sharepoint.com/'
     },{
@@ -59,6 +60,6 @@ module.exports = function(generator,siteDefinition,config){
             siteDefinition.url = cfg.url; 
         }
         var transformer = createTransformer(cfg,siteDefinition);
-        return transformer.transform(config,siteDefinition)
+        return transformer.transform(cfg,siteDefinition)
     }); 
 }
