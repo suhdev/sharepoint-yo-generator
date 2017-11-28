@@ -10,6 +10,7 @@ const configurePrototypes = require('./configureprototypes');
 const configureComposedLook = require('./configurecomposedlook');
 const configureSource = require('./configuresource');
 const cleanSiteDefinition = require('./cleansitedefinition');
+const configureGulp = require('./configuregulp'); 
 const configureLibraries = require('./configurelibraries'); 
 function loadSiteDefinition(generator){
     var siteDefinitionExists = fs.existsSync(generator.destinationPath('SiteDefinition.json'));
@@ -20,6 +21,7 @@ function loadSiteDefinition(generator){
             siteDefinition = generator.siteDefinition = require('sharepoint-util/templates/SiteDefinition');
         }
     }
+    
     generator.siteDefinition = generator.siteDefinition || {};
     generator.siteDefinition.fields = generator.siteDefinition.fields || [];
     generator.siteDefinition.contentTypes = generator.siteDefinition.contentTypes || [];
@@ -27,23 +29,39 @@ function loadSiteDefinition(generator){
     generator.siteDefinition.termGroups = generator.siteDefinition.termGroups || [];
     return generator.siteDefinition; 
 }
+let gulp = null; 
 module.exports = function initial(generator,config){
     let siteDefinition = generator.siteDefinition || null; 
+    if (fs.existsSync(path.resolve(generator.destinationPath('gulpfile.js')))) {
+        try{
+            gulp = require(path.resolve(generator.destinationPath('gulpfile.js')));
+        }catch(err){
+            console.log(`Could not load gulpfile.js: ${err.message}`);
+            gulp = null;
+        }
+    }
     const prompts = [
         {
             type: 'list',
             name: 'action',
             message: 'What would you like to do?',
             default: 'configure',
-            choices: [
-                'configure',
-                'generate deployment scripts',
-                'configure cdn libraries',
-                'configure SiteDefinition',
-                'configure source',
-                'configure prototypes',
-                'nothing'
-            ]
+            choices(){
+                var c = [
+                    'configure',
+                    'generate deployment scripts',
+                    'configure cdn libraries',
+                    'configure SiteDefinition',
+                    'configure source',
+                    'configure prototypes',
+                    'nothing'
+                ];
+                if (gulp){
+                    c.unshift('run gulp tasks');
+                }
+
+                return c; 
+            }
         }
     ];
     let action = null;
@@ -68,6 +86,8 @@ module.exports = function initial(generator,config){
                 return configurePrototypes(generator, config);
             } else if (props.action === 'configure source') {
                 return configureSource(generator, config);
+            } else if (props.action === 'run gulp tasks'){
+                return configureGulp(generator,config,gulp); 
             }
         })
         .then(() => {

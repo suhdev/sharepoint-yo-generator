@@ -61,7 +61,7 @@ module.exports = class extends Generator {
     });
     // Have Yeoman greet the user.
     this.log(
-      yosay('Welcome to the super-duper ' + chalk.red('generator-sysdoc') + ' generator!')
+      yosay('Welcome to the super-duper ' + chalk.red('generator-sharepoint-util') + ' generator!')
     );
     return initial(this, this._cfg);
   }

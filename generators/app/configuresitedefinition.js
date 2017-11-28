@@ -7,6 +7,7 @@ const cleanSiteDefinition = require('./cleansitedefinition');
 const configureTermStore = require('./configuretermstore');
 const configureSecutiry = require('./configuresecurity');
 const configureApps = require('./configureapps'); 
+const configureFiles = require('./configurefiles'); 
 const configureFeatures = require('./configurefeatures');
 const configureNavigation = require('./configurenavigation');
 const configureCommands = require('./configurecommands'); 
@@ -61,9 +62,10 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
         'configure composed look',
         'configure font palette',
         'configure color palette',
+        'configure page layouts and master pages',
         'set home page',
         'set default page layout', 
-        // 'configure commands', 
+        'configure commands', 
         'enable using site collection term group',
         'disable using site collection term group'];
           if (fs.existsSync(generator.destinationPath('./apps'))){
@@ -291,6 +293,8 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
         return configureColorPalette(generator,config,siteDefinition); 
       }else if (answers.action === 'configure font palette') {
         return configureFontPalette(generator,config,siteDefinition);
+      } else if (answers.action === 'configure page layouts and master pages'){
+        return configureFiles(generator,config,siteDefinition); 
       }
     })
     .then(()=>{
