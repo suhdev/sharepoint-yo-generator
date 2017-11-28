@@ -12,11 +12,15 @@ function searchForLibrary(libraryName){
 function getLibraryVersions(libraryName){
     return new Promise((res, rej) => {
         request(`https://api.cdnjs.com/libraries/${libraryName}?fields=name,assets,version`, (err, response, body) => {
+            if (err){
+                res([{ name: 'No results' }]); 
+            }
             let box = typeof body === "string" ? JSON.parse(body) : body; 
-            res(box && box.assets || [{ name: 'No results' }]);
+            res(box && box.assets && assets.length?box.assets:[{ name: 'No results' }]);
         });
     });
 }
+
 module.exports = function configureLibraries(generator,config){
     let packages = [];
     let versions = []; 
@@ -28,7 +32,7 @@ module.exports = function configureLibraries(generator,config){
             name: 'action',
             message: 'Do you want to add libraries from cdn?',
             choices:()=>{
-                var c = ['add a library', 'search cdnjs']; 
+                var c = ['add a library using URL', 'add library from cdnjs.com']; 
                 if (config.cdn && config.cdn.length > 0){
                     c.push('remove libraries'); 
                 }
@@ -38,11 +42,14 @@ module.exports = function configureLibraries(generator,config){
         },
         {
             type: 'input',
-            name: 'cdnLibrary',
-            message: 'What is the library name?',
+            name: 'libUrl',
+            message: 'What is the library URL?',
             default: 'jquery',
+            validate(val){
+                return val && val.trim() && val.startsWith('http')?true:'Please provide a valid URL';
+            },
             when: answers => {
-                return answers.action === 'add a library';
+                return answers.action === 'add a library using URL';
             }
         },
         {
@@ -50,7 +57,7 @@ module.exports = function configureLibraries(generator,config){
             name:'librarySearchName',
             message:'What is the library name you are looking for?', 
             when(answers){
-                return answers.action === 'search cdnjs'; 
+                return answers.action === 'add library from cdnjs'; 
             },
             
         },{
@@ -65,18 +72,18 @@ module.exports = function configureLibraries(generator,config){
             },
             message:'Which library do you want to add?',
             when(answers) {
-                return answers.action === 'search cdnjs';
+                return answers.action === 'add library from cdnjs';
             },
             choices(answers) {
                 return searchForLibrary(answers.librarySearchName)
                     .then((e) => {
-                        packages = e; 
+                        packages = e || []; 
                         return e.map((e) => {
                             return {
                                 name: e.name,
                                 value: e.name
                             };
-                        });
+                        })
                     });
             }
         },{
@@ -103,7 +110,7 @@ module.exports = function configureLibraries(generator,config){
                     })
             },
             when(answers){
-                return answers.action === 'search cdnjs' && 
+                return answers.action === 'add library from cdnjs' && 
                 answers.libraryName !== 'No results';
             }
         },{
@@ -126,7 +133,7 @@ module.exports = function configureLibraries(generator,config){
                 });
             },
             when(answers){
-                return answers.action === 'search cdnjs';
+                return answers.action === 'add library from cdnjs';
             }
         },
         {
@@ -146,11 +153,13 @@ module.exports = function configureLibraries(generator,config){
 
     return generator.prompt(libraryPrompts).then(answers => {
         action = answers.action; 
-        if (answers.action === 'add a library') {
-            generator.libraries.push(answers.cdnLibrary);
-            config.cdn.push(answers.cdnLibrary);
-            return generator.prompt(libraryPrompts);
-        }else if (answers.action === 'search cdnjs'){
+        if (answers.action === 'add a library using URL') {
+            generator.libraries.push(answers.libUrl);
+            config.cdn = config.cdn || []; 
+            config.cdn.push(answers.libUrl);
+            generator.config.set(config);
+            generator.config.save(); 
+        }else if (answers.action === 'add library from cdnjs'){
             if (library && library.files && library.name && library.version){
                 config.cdn = config.cdn || []; 
                 library.files.forEach((e)=>{
