@@ -1,5 +1,10 @@
 module.exports = function configureGulp(generator,config,gulp){
-    var keys = Object.keys(gulp.tasks); 
+    var keys = []; 
+    try {
+        keys = Object.keys(gulp.tasks || {}); 
+    }catch(err){
+        console.log(err.message);
+    }
     const prompts = [{
         type:'list', 
         name:'action',
