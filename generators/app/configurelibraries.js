@@ -32,7 +32,7 @@ module.exports = function configureLibraries(generator,config){
             name: 'action',
             message: 'Do you want to add libraries from cdn?',
             choices:()=>{
-                var c = ['add a library using URL', 'add library from cdnjs.com']; 
+                var c = ['add a library using URL', 'add library from cdnjs.com.com']; 
                 if (config.cdn && config.cdn.length > 0){
                     c.push('remove libraries'); 
                 }
@@ -57,7 +57,7 @@ module.exports = function configureLibraries(generator,config){
             name:'librarySearchName',
             message:'What is the library name you are looking for?', 
             when(answers){
-                return answers.action === 'add library from cdnjs'; 
+                return answers.action === 'add library from cdnjs.com'; 
             },
             
         },{
@@ -72,7 +72,7 @@ module.exports = function configureLibraries(generator,config){
             },
             message:'Which library do you want to add?',
             when(answers) {
-                return answers.action === 'add library from cdnjs';
+                return answers.action === 'add library from cdnjs.com';
             },
             choices(answers) {
                 return searchForLibrary(answers.librarySearchName)
@@ -110,7 +110,7 @@ module.exports = function configureLibraries(generator,config){
                     })
             },
             when(answers){
-                return answers.action === 'add library from cdnjs' && 
+                return answers.action === 'add library from cdnjs.com' && 
                 answers.libraryName !== 'No results';
             }
         },{
@@ -133,7 +133,7 @@ module.exports = function configureLibraries(generator,config){
                 });
             },
             when(answers){
-                return answers.action === 'add library from cdnjs';
+                return answers.action === 'add library from cdnjs.com';
             }
         },
         {
@@ -159,7 +159,7 @@ module.exports = function configureLibraries(generator,config){
             config.cdn.push(answers.libUrl);
             generator.config.set(config);
             generator.config.save(); 
-        }else if (answers.action === 'add library from cdnjs'){
+        }else if (answers.action === 'add library from cdnjs.com.com'){
             if (library && library.files && library.name && library.version){
                 config.cdn = config.cdn || []; 
                 library.files.forEach((e)=>{
