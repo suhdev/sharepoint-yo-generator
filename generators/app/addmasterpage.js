@@ -40,7 +40,10 @@ module.exports = function addMasterPage(generator, siteDefinition, config, mp) {
         name: 'src',
         message: 'What is the file name?',
         filter(val) {
-            masterPage.src = val.trim();
+            let fileName = val.trim();
+            fileName = fileName.endsWith('.njk') ? fileName : fileName + '.njk';
+            masterpage.template = fileName;
+            masterpage.src = path.basename(fileName, path.extname('.njk')) + '.aspx'; 
             return val;
         },
         validate(val) {

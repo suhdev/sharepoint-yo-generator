@@ -42,7 +42,10 @@ module.exports = function addPageLayout(generator, siteDefinition, config, pl) {
         name: 'src',
         message: 'What is the source file name?',
         filter(val) {
-            pageLayout.src = val.trim();
+            let fileName = val.trim();
+            fileName = fileName.endsWith('.njk')?fileName:fileName+'.njk'; 
+            pageLayout.template = fileName;
+            pageLayout.src = path.basename(fileName, path.extname('.njk'))+'.aspx'; 
             return val;
         },
         validate(val) {
