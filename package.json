@@ -1,6 +1,6 @@
 {
   "name": "generator-sharepoint-app",
-  "version": "0.0.50",
+  "version": "0.0.52",
   "description": "A yeoman generator for SharePoint projects",
   "homepage": "",
   "author": {
@@ -8,14 +8,9 @@
     "email": "suhail.abood@gmail.com",
     "url": ""
   },
-  "files": [
-    "generators"
-  ],
+  "files": ["generators"],
   "main": "generators/index.js",
-  "keywords": [
-    "Generator",
-    "yeoman-generator"
-  ],
+  "keywords": ["Generator", "yeoman-generator"],
   "devDependencies": {
     "eslint": "^4.1.0",
     "eslint-config-prettier": "^2.8.0",
@@ -37,7 +32,7 @@
     "jira-connector": "^2.7.0",
     "lodash": "^4.17.4",
     "request": "^2.83.0",
-    "sharepoint-util": "^1.0.38",
+    "sharepoint-util": "^1.0.39",
     "tough-cookie-file-store": "^1.2.0",
     "yeoman-generator": "^2.0.1",
     "yosay": "^2.0.1"
@@ -52,20 +47,11 @@
     "test": "jest"
   },
   "lint-staged": {
-    "*.js": [
-      "eslint --fix",
-      "git add"
-    ],
-    "*.json": [
-      "prettier --write",
-      "git add"
-    ]
+    "*.js": ["eslint --fix", "git add"],
+    "*.json": ["prettier --write", "git add"]
   },
   "eslintConfig": {
-    "extends": [
-      "xo",
-      "prettier"
-    ],
+    "extends": ["xo", "prettier"],
     "env": {
       "jest": true,
       "node": true
@@ -79,9 +65,7 @@
         }
       ]
     },
-    "plugins": [
-      "prettier"
-    ]
+    "plugins": ["prettier"]
   },
   "repository": {
     "url": "https://github.com/suhdev/sharepoint-yo-generator.git",
