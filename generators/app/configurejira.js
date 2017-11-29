@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs'); 
 const os = require('os'); 
 const request = require('request'); 
-const FileCookieStore = require('tough-cookie-filestore'); 
+const FileCookieStore = require('tough-cookie-file-store'); 
 
 function getJiraClient(host){
    
