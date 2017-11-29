@@ -1,7 +1,6 @@
 const path = require('path');
 const fs = require('fs');
 const addTodo = require('./addtodo');
-console.log(addTodo);
 function fileNameWithoutExtension(filename) {
   return path.basename(filename, path.extname(filename));
 }
