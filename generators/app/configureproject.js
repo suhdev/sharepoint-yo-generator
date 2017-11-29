@@ -1,3 +1,6 @@
+const configureJira = require('./configurejira'); 
+const addTodo = require('./addtodo');
+const addTodoGroup = require('./addtodogroup'); 
 module.exports = function configureProject(generator, defaultConfig) {
   const prompts = [
     {
@@ -7,11 +10,14 @@ module.exports = function configureProject(generator, defaultConfig) {
       choices: () => {
         var c = [
           'init',
+          'add todo', 
+          'add todo group',
           'set title',
           'set name',
           'set description',
           'set version',
           'set assets directory',
+          'setup jira account', 
           'set lib directory',
           'set src directory',
           'set sass directory',
@@ -36,6 +42,13 @@ module.exports = function configureProject(generator, defaultConfig) {
           'enable npm install --save',
           'set bootstrap version'
         ];
+
+        if (defaultConfig.todoGroups && defaultConfig.todoGroups.length){
+          c.splice(3,0,'edit todo group','remove todo group'); 
+        }
+        if (defaultConfig.todos && defaultConfig.todos.length){
+          c.splice(2,0,'edit todo','remove todo'); 
+        }
 
         c.push('back');
         return c;
@@ -483,6 +496,35 @@ module.exports = function configureProject(generator, defaultConfig) {
       when: answers => {
         return answers.action === 'init' || answers.action === 'set bootstrap version';
       }
+    },{
+      type:'list',
+      name:'todo',
+      choices(){
+        return defaultConfig.todos.map(e=>{
+          return {
+            name:e.content,
+            value:e.id
+          };
+        })
+      },
+      when(answers){
+        return answers.action === 'edit todo' || answers.action === 'remove todo'; 
+      },
+      message(answers){
+        return answers.action === 'edit todo'?'Which todo do you want to edit?':'Which todo do you want to remove?';
+      } 
+    }, {
+      type: 'list',
+      name: 'todoGroup',
+      choices() {
+        return defaultConfig.todoGroups.map(e => e.name)
+      },
+      when(answers) {
+        return answers.action === 'edit todo group' || answers.action === 'remove todo group';
+      },
+      message(answers) {
+        return answers.action === 'edit todo group' ? 'Which todo group do you want to edit?' : 'Which todo group do you want to remove?';
+      }
     }
   ];
   let action = null;
@@ -498,11 +540,44 @@ module.exports = function configureProject(generator, defaultConfig) {
         defaultConfig.disableNpmInstall = true;
       } else if (answers.action === 'enable npm install --save') {
         defaultConfig.disableNpmInstall = false;
+      } else if (answers.action === 'setup jira account'){
+        return configureJira(generator, defaultConfig); 
+      } else if (answers.action === 'add todo'){
+        defaultConfig.todos = defaultConfig.todos || []; 
+        defaultConfig.todoGroups = defaultConfig.todoGroups || [{
+          name:'UI'
+        },{
+          name:'Prototyping'
+        },{
+          name:'Investigation'
+        }]; 
+        return addTodo(generator, defaultConfig, defaultConfig.todos, defaultConfig.todoGroups);
+      }else if (answers.action === 'add todo group'){
+        defaultConfig.todoGroups = defaultConfig.todoGroups || []; 
+        return addTodoGroup(generator,todoGroups);
+      }else if (answers.action === 'edit todo'){
+        let todo = defaultConfig.todos.find((e)=>{
+          return e.id === answers.todo; 
+        });
+        return addTodo(generator,defaultConfig,defaultConfig.todos,defaultConfig.todoGroups,todo); 
+      }else if (answers.action === 'remove todo'){
+        defaultConfig.todos = defaultConfig.todos.filter((e)=>{
+          return e.id !== answers.todo; 
+        })
+      } else if (answers.action === 'edit todo group') {
+        let group = defaultConfig.todoGroups.find((e) => {
+          return e.name === answers.todoGroup;
+        });
+        return addTodoGroup(generator, defaultConfig.todoGroups,group);
+      } else if (answers.action === 'remove todo group') {
+        defaultConfig.todoGroups = defaultConfig.todoGroups.filter((e) => {
+          return e.name !== answers.todoGroup;
+        })
       }
-      generator.config.set(defaultConfig);
-      generator.config.save();
     })
     .then(() => {
+      generator.config.set(defaultConfig);
+      generator.config.save(); 
       if (action !== 'back' && action !== 'init') {
         return configureProject(generator, defaultConfig);
       }

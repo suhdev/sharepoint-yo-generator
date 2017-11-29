@@ -1,10 +1,13 @@
 const path = require('path');
 const fs = require('fs');
+const addTodo = require('./addtodo');
+console.log(addTodo);
 function fileNameWithoutExtension(filename) {
   return path.basename(filename, path.extname(filename));
 }
 module.exports = function addPrototype(generator, config, p, isNew) {
   var isEdit = Boolean(p);
+  
   let sourceFiles = [];
   try {
     var fsExists = fs.existsSync(
@@ -27,20 +30,29 @@ module.exports = function addPrototype(generator, config, p, isNew) {
   } catch (err) {
     console.log(`Could not read prototypes directory content: ${err.message}`);
   }
-  var pr = p || {};
+  var pr = p || {
+    todos:[]
+  };
   const prompts = [
     {
       type: 'list',
       name: 'action',
       message: 'What would you like to do next?',
       choices() {
-        return [
+        var c = [
           'set name',
           'set description',
           'set subtitle',
           'set typescript source file',
-          'set status'
-        ];
+          'set status',
+          'add todo'
+        ]; 
+        if (pr.todos && pr.todos.length){
+          c.push('edit todo','remove todo'); 
+        }
+
+        c.push('back');
+        return c; 
       },
       when() {
         return isEdit && !isNew;
@@ -170,9 +182,25 @@ module.exports = function addPrototype(generator, config, p, isNew) {
       when(answers) {
         return !isEdit || answers.action === 'set status' || isNew;
       }
+    },{
+      type:'list',
+      name:'todo',
+      when(answers){
+        return answers.action === 'edit todo' || answers.action === 'remove todo'; 
+      },
+      choices(){
+        return pr.todos.map((e)=>{
+          return {
+            name:e.content,
+            value:e.id
+          };
+        })
+      }
     }
   ];
-  return generator.prompt(prompts).then(() => {
+  let action = null; 
+  return generator.prompt(prompts).then((answers) => {
+    action = answers.action; 
     pr.srcFile = fileNameWithoutExtension(pr.fileName) + '.tsx';
     pr.baseName = path.basename(pr.fileName, path.extname(pr.fileName));
     delete pr.isNew;
@@ -199,6 +227,7 @@ module.exports = function addPrototype(generator, config, p, isNew) {
         pr
       );
     }
+    
     if (
       !isEdit ||
       (!fs.existsSync(
@@ -291,6 +320,24 @@ module.exports = function addPrototype(generator, config, p, isNew) {
         ''
       );
     }
+    if (answers.action === 'add todo') {
+      pr.todos = pr.todos || [];
+      config.todoGroups = config.todoGroups || [];
+      return addTodo(generator, config, pr.todos, config.todoGroups);
+    } else if (answers.action === 'edit todo') {
+      let td = pr.todos.find((e) => {
+        return e.id === answers.todo;
+      });
+      return addTodo(generator, config, pr.todos, config.todoGroups, td);
+    } else if (answers.action === 'remove todo') {
+      pr.todos = pr.todos.filter((e) => {
+        return e.id !== answers.todo;
+      });
+      
+    }
+   
+  })
+  .then((answers)=>{
     generator.fs.writeJSON(
       generator.destinationPath(
         config.prototypeTemplatesDir,
@@ -299,5 +346,8 @@ module.exports = function addPrototype(generator, config, p, isNew) {
       ),
       pr
     );
+    if (action !== 'back'){
+      return addPrototype(generator,config,p);
+    }
   });
 };

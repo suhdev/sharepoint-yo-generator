@@ -16,7 +16,7 @@ function getLibraryVersions(libraryName){
                 res([{ name: 'No results' }]); 
             }
             let box = typeof body === "string" ? JSON.parse(body) : body; 
-            res(box && box.assets && assets.length?box.assets:[{ name: 'No results' }]);
+            res(box && box.assets && box.assets.length?box.assets:[{ name: 'No results' }]);
         });
     });
 }
@@ -32,7 +32,7 @@ module.exports = function configureLibraries(generator,config){
             name: 'action',
             message: 'Do you want to add libraries from cdn?',
             choices:()=>{
-                var c = ['add a library using URL', 'add library from cdnjs.com.com']; 
+                var c = ['add a library using URL', 'add library from cdnjs.com']; 
                 if (config.cdn && config.cdn.length > 0){
                     c.push('remove libraries'); 
                 }
@@ -159,7 +159,7 @@ module.exports = function configureLibraries(generator,config){
             config.cdn.push(answers.libUrl);
             generator.config.set(config);
             generator.config.save(); 
-        }else if (answers.action === 'add library from cdnjs.com.com'){
+        }else if (answers.action === 'add library from cdnjs.com'){
             if (library && library.files && library.name && library.version){
                 config.cdn = config.cdn || []; 
                 library.files.forEach((e)=>{
