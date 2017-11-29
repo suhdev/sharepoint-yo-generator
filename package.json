@@ -38,7 +38,6 @@
     "lodash": "^4.17.4",
     "request": "^2.83.0",
     "sharepoint-util": "^1.0.38",
-    "tough-cookie": "^2.3.3",
     "tough-cookie-filestore": "0.0.1",
     "yeoman-generator": "^2.0.1",
     "yosay": "^2.0.1"
