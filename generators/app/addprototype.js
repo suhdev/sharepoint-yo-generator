@@ -346,7 +346,7 @@ module.exports = function addPrototype(generator, config, p, isNew) {
       pr
     );
     if (action !== 'back'){
-      return addPrototype(generator,config,p);
+      return addPrototype(generator,config,pr);
     }
   });
 };
