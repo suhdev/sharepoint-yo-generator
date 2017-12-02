@@ -1,6 +1,6 @@
 {
   "name": "generator-sharepoint-app",
-  "version": "0.0.59",
+  "version": "0.0.60",
   "description": "A yeoman generator for SharePoint projects",
   "homepage": "",
   "author": {
@@ -32,7 +32,7 @@
     "jira-connector": "^2.7.0",
     "lodash": "^4.17.4",
     "request": "^2.83.0",
-    "sharepoint-util": "^1.0.44",
+    "sharepoint-util": "^1.0.45",
     "tough-cookie-file-store": "^1.2.0",
     "yeoman-generator": "^2.0.1",
     "yosay": "^2.0.1"
