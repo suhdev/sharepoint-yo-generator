@@ -25,7 +25,7 @@ module.exports = function addMasterPage(generator, siteDefinition, config, mp) {
             masterPage.title = val.trim();
             return val;
         },
-        message: 'What is the title of the page layout?',
+        message: 'What is the title of the master page?',
         when(answers) {
             return !isEdit || answers.action === 'set title';
         },
@@ -42,8 +42,8 @@ module.exports = function addMasterPage(generator, siteDefinition, config, mp) {
         filter(val) {
             let fileName = val.trim();
             fileName = fileName.endsWith('.njk') ? fileName : fileName + '.njk';
-            masterpage.template = fileName;
-            masterpage.src = path.basename(fileName, path.extname('.njk')) + '.aspx'; 
+            masterPage.template = fileName;
+            masterPage.src = path.basename(fileName, path.extname('.njk')) + '.aspx'; 
             return val;
         },
         validate(val) {

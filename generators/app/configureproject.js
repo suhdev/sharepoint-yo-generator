@@ -16,6 +16,7 @@ module.exports = function configureProject(generator, defaultConfig) {
           'set name',
           'set description',
           'set version',
+          'set use localization',
           'set assets directory',
           'setup jira account', 
           'set lib directory',
@@ -140,6 +141,21 @@ module.exports = function configureProject(generator, defaultConfig) {
       },
       when: answers => {
         return answers.action === 'init' || answers.action === 'set version';
+      }
+    },
+    {
+      type: 'confirm',
+      name: 'useLocalization',
+      message: 'Is this project localized?',
+      default:()=>{
+        return defaultConfig.useLocalization || false;
+      },
+      when(answers) {
+        return answers.action === 'init' || answers.action === 'set use localization';
+      },
+      filter(val){
+        defaultConfig.useLocalization = val;
+        return val;
       }
     },
     {
