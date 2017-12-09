@@ -3,7 +3,10 @@ const path = require('path');
 const { BuiltInContentTypeList } = require('sharepoint-util/lib/sharepoint/builtin');
 module.exports = function addPageLayout(generator, siteDefinition, config, pl) {
     const isEdit = pl ? true : false;
-    let pageLayout = pl || {};
+    let pageLayout = pl || {
+        isPageLayout:true, 
+    };
+    let fieldName = null; 
     const prompts = [{
         type: 'list',
         name: 'action',
@@ -14,6 +17,7 @@ module.exports = function addPageLayout(generator, siteDefinition, config, pl) {
                 'set content type',
                 'set description',
                 'set force overwrite when deployed',
+                'set field',
                 'back'
             ];
         },
@@ -61,7 +65,7 @@ module.exports = function addPageLayout(generator, siteDefinition, config, pl) {
         type: 'input',
         name: 'description',
         filter(val) {
-            pageLayout.description = val;
+            pageLayout.description = val.trim();
             return val;
         },
         validate(val) {
@@ -92,6 +96,47 @@ module.exports = function addPageLayout(generator, siteDefinition, config, pl) {
             return pageLayout.contentType;
         }
     }, {
+        type:'list', 
+        name:'field',
+        message:'Which field do you want to set?',
+        choices:()=>{
+            let keys = Object.keys(pageLayout.fields||{}); 
+            return ['add new field',...keys]; 
+        },
+        default:'add new field', 
+        when(answers){
+            return answers.action === 'set field'; 
+        }
+    },{
+        type:'input', 
+        name:'fieldName', 
+        message:'What is the name of the field?', 
+        when(answers){
+            return answers.field === 'add new field' && answers.action === 'set field'; 
+        },
+        validate(val){
+            return val.trim()?true:'Please provide a valid name'; 
+        },
+        filter(val){
+            return fieldName = val.trim(); 
+        }
+    },{
+        type:'input', 
+        name:'fieldValue', 
+        message:(answers)=>{
+            return `What is the value of ${answers.fieldName}?`; 
+        },
+        when(answers){
+            return answers.action === 'set field'; 
+        },
+        validate(val){
+            return val && val.trim()?true:'Please provide a valid value';
+        },
+        filter(val){
+            pageLayout.fields = pageLayout.fields || {}; 
+            pageLayout.fields[fieldName] = val.trim(); 
+        }
+    },{
         type: 'confirm',
         name: 'overwrite',
         message: 'Do you want to force overwriting this file when you deploy?',
@@ -118,7 +163,7 @@ module.exports = function addPageLayout(generator, siteDefinition, config, pl) {
                 generator.fs.copy(path.resolve(__dirname, `../../node_modules/sharepoint-util/templates/pagelayoutmacros.${config.sharePointVersion || 'online'}.njk`),
                     generator.destinationPath(config.templatesDir, `pagelayoutmacros.${config.sharePointVersion || 'online'}.njk`), {});
                 generator.fs.copy(path.resolve(__dirname, `../../node_modules/sharepoint-util/templates/DefaultLayout.${config.sharePointVersion || 'online'}.njk`),
-                    generator.destinationPath(config.pageLayoutTemplatesDir, pageLayout.src), {});
+                    generator.destinationPath(config.pageLayoutTemplatesDir, pageLayout.template), {});
             }
         })
         .then(() => {

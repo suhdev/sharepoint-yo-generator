@@ -2,7 +2,9 @@ const fs = require('fs');
 const path = require('path'); 
 module.exports = function addMasterPage(generator, siteDefinition, config, mp) {
     const isEdit = mp ? true : false;
-    let masterPage = mp || {};
+    let masterPage = mp || {
+        isMasterPage:true,
+    };
     const prompts = [{
         type: 'list',
         name: 'action',
@@ -12,6 +14,7 @@ module.exports = function addMasterPage(generator, siteDefinition, config, mp) {
                 'set title',
                 'set description',
                 'set force overwrite when deployed',
+                'set field',
                 'back'
             ];
         },
@@ -43,7 +46,7 @@ module.exports = function addMasterPage(generator, siteDefinition, config, mp) {
             let fileName = val.trim();
             fileName = fileName.endsWith('.njk') ? fileName : fileName + '.njk';
             masterPage.template = fileName;
-            masterPage.src = path.basename(fileName, path.extname('.njk')) + '.aspx'; 
+            masterPage.src = path.basename(fileName, path.extname('.njk')) + '.master'; 
             return val;
         },
         validate(val) {
@@ -62,7 +65,7 @@ module.exports = function addMasterPage(generator, siteDefinition, config, mp) {
             masterPage.description = val;
             return val;
         },
-        message: 'What is the description of the page layout?',
+        message: 'What is the description of the master page?',
         when(answers) {
             return !isEdit || answers.action === 'set description';
         },
@@ -70,6 +73,47 @@ module.exports = function addMasterPage(generator, siteDefinition, config, mp) {
             return masterPage.description;
         }
     }, {
+        type:'list', 
+        name:'field',
+        message:'Which field do you want to set?',
+        choices:()=>{
+            let keys = Object.keys(masterPage.fields||{}); 
+            return ['add new field',...keys]; 
+        },
+        default:'add new field', 
+        when(answers){
+            return answers.action === 'set field'; 
+        }
+    },{
+        type:'input', 
+        name:'fieldName', 
+        message:'What is the name of the field?', 
+        when(answers){
+            return answers.field === 'add new field' && answers.action === 'set field'; 
+        },
+        validate(val){
+            return val.trim()?true:'Please provide a valid name'; 
+        },
+        filter(val){
+            return fieldName = val.trim(); 
+        }
+    },{
+        type:'input', 
+        name:'fieldValue', 
+        message:(answers)=>{
+            return `What is the value of ${answers.fieldName}?`; 
+        },
+        when(answers){
+            return answers.action === 'set field'; 
+        },
+        validate(val){
+            return val && val.trim()?true:'Please provide a valid value';
+        },
+        filter(val){
+            masterPage.fields = masterPage.fields || {}; 
+            masterPage.fields[fieldName] = val.trim(); 
+        }
+    },{
         type: 'confirm',
         name: 'overwrite',
         message: 'Do you want to force overwriting this file when you deploy?',
@@ -96,7 +140,7 @@ module.exports = function addMasterPage(generator, siteDefinition, config, mp) {
                 generator.fs.copy(path.resolve(__dirname, `../../node_modules/sharepoint-util/templates/masterpagemacros.${config.sharePointVersion || 'online'}.njk`),
                     generator.destinationPath(config.templatesDir, `masterpagemacros.${config.sharePointVersion || 'online'}.njk`), {});
                 generator.fs.copy(path.resolve(__dirname, `../../node_modules/sharepoint-util/templates/masterpage.${config.sharePointVersion || 'online'}.njk`),
-                    generator.destinationPath(config.masterPageTemplatesDir, masterPage.src), {});
+                    generator.destinationPath(config.masterPageTemplatesDir, masterPage.template), {});
             }
         })
         .then(() => {
