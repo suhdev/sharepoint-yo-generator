@@ -32,7 +32,7 @@
     "jira-connector": "^2.7.0",
     "lodash": "^4.17.4",
     "request": "^2.83.0",
-    "sharepoint-util": "^1.0.48",
+    "sharepoint-util": "^1.0.50",
     "tough-cookie-file-store": "^1.2.0",
     "yeoman-generator": "^2.0.1",
     "yosay": "^2.0.1"
