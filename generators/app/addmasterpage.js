@@ -46,7 +46,7 @@ module.exports = function addMasterPage(generator, siteDefinition, config, mp) {
             let fileName = val.trim();
             fileName = fileName.endsWith('.njk') ? fileName : fileName + '.njk';
             masterPage.template = fileName;
-            masterPage.src = path.basename(fileName, path.extname('.njk')) + '.master'; 
+            masterPage.src = path.basename(fileName, path.extname(fileName)) + '.master';
             return val;
         },
         validate(val) {

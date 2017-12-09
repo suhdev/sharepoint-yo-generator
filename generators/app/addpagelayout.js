@@ -49,7 +49,7 @@ module.exports = function addPageLayout(generator, siteDefinition, config, pl) {
             let fileName = val.trim();
             fileName = fileName.endsWith('.njk')?fileName:fileName+'.njk'; 
             pageLayout.template = fileName;
-            pageLayout.src = path.basename(fileName, path.extname('.njk'))+'.aspx'; 
+            pageLayout.src = path.basename(fileName, path.extname(fileName))+'.aspx'; 
             return val;
         },
         validate(val) {
