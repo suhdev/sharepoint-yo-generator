@@ -1,17 +1,17 @@
-const addField= require('./addfield'); 
+const addField= require('./addfield');
 const addContentType =require('./addcontenttype');
-const addList = require('./addlist'); 
+const addList = require('./addlist');
 const _ = require('lodash');
 const fs = require('fs');
 const cleanSiteDefinition = require('./cleansitedefinition');
 const configureTermStore = require('./configuretermstore');
 const configureSecutiry = require('./configuresecurity');
-const configureApps = require('./configureapps'); 
-const configureFiles = require('./configurefiles'); 
+const configureApps = require('./configureapps');
+const configureFiles = require('./configurefiles');
 const configureFeatures = require('./configurefeatures');
 const configureNavigation = require('./configurenavigation');
-const configureCommands = require('./configurecommands'); 
-const configureLocalizations = require('./configureloclization'); 
+const configureCommands = require('./configurecommands');
+const configureLocalizations = require('./configureloclization');
 const configureComposedLook = require('./configurecomposedlook');
 const configureFontPalette = require('./configurefontpalette');
 const configureColorPalette = require('./configurecolorpalette');
@@ -20,31 +20,31 @@ function getDocumentContentTypes(contentType,cTypes,doneTypes,output){
   if (doneTypes[contentType.name]){
     return false;
   }else if (cTypes[contentType.parent]){
-    if (getDocumentContentTypes(cTypes[contentType.parent],cTypes,output)){
+    if (getDocumentContentTypes(cTypes[contentType.parent],cTypes,doneTypes,output)){
       if (!doneTypes[contentType.name]){
         output.push(contentType);
-        doneTypes[contentType.name] = true; 
+        doneTypes[contentType.name] = true;
       }
-      return true; 
+      return true;
     }
   } else if (contentType.parent === 'Document') {
     if (!doneTypes[contentType.name]){
       output.push(contentType);
-      doneTypes[contentType.name] = true; 
+      doneTypes[contentType.name] = true;
     }
     return true;
-  } 
+  }
   return false;
 }
 
 function getDocTypes(contentTypes){
   var output = [];
   var cTypes = _.keyBy(contentTypes,'name');
-  var doneTypes = {}; 
+  var doneTypes = {};
   contentTypes.forEach((e)=>{
-    getDocumentContentTypes(e,cTypes,doneTypes,output); 
+    getDocumentContentTypes(e,cTypes,doneTypes,output);
   })
-  return output; 
+  return output;
 }
 module.exports = function configureSiteDefinition(generator,siteDefinition,config){
     const prompts = [{
@@ -54,7 +54,7 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
       choices:()=>{
         var c = [
         'validate',
-        'configure term store', 
+        'configure term store',
         'configure security',
         'configure features',
         'configure navigation',
@@ -64,8 +64,8 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
         'configure color palette',
         'configure page layouts and master pages',
         'set home page',
-        'set default page layout', 
-        'configure commands', 
+        'set default page layout',
+        'configure commands',
         'enable using site collection term group',
         'disable using site collection term group'];
           if (fs.existsSync(generator.destinationPath('./apps'))){
@@ -86,25 +86,25 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
           if (siteDefinition.contentTypes && siteDefinition.contentTypes.length){
             c.push('edit a content type','remove a content type');
           }
-          c.push('add a list'); 
+          c.push('add a list');
           if (siteDefinition.lists && siteDefinition.lists.length){
             c.push('edit a list','remove a list');
           }
           c.push('exit');
-          return c; 
+          return c;
         }
     },{
       type:'list',
-      name:'fieldName', 
-      message:'Which field do you want to edit?', 
+      name:'fieldName',
+      message:'Which field do you want to edit?',
       choices:()=>{
         if (siteDefinition.fields.length === 0){
-          return ['New']; 
+          return ['New'];
         }
-        return ['New',...siteDefinition.fields.map((e)=>e.name)]; 
+        return ['New',...siteDefinition.fields.map((e)=>e.name)];
       },
       when:(answers)=>{
-        return answers.action === 'edit a field'; 
+        return answers.action === 'edit a field';
       }
     },{
       type:'list',
@@ -112,9 +112,9 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
       message:'Which content type do you want to edit?',
       choices:()=>{
         if (siteDefinition.contentTypes.length === 0){
-          return ['New']; 
+          return ['New'];
         }
-        return ['New',...siteDefinition.contentTypes.map((e)=>e.name)]; 
+        return ['New',...siteDefinition.contentTypes.map((e)=>e.name)];
       },
       when:(answers)=>{
         return answers.action === 'edit a content type';
@@ -125,47 +125,47 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
       message:'Which list do you want to edit?',
       choices:()=>{
         if (siteDefinition.lists.length === 0){
-          return ['New']; 
+          return ['New'];
         }
-        return ['New',...siteDefinition.lists.map((e)=>e.title)]; 
+        return ['New',...siteDefinition.lists.map((e)=>e.title)];
       },
       when:(answers)=>{
         return answers.action === 'edit a list';
       }
     },{
       type:'list',
-      name:'removeField', 
-      message:'Which field do you want to remove?', 
+      name:'removeField',
+      message:'Which field do you want to remove?',
       choices:()=>{
-        return siteDefinition.fields.map(e=>e.name); 
+        return siteDefinition.fields.map(e=>e.name);
       },
       filter:(val)=>{
         siteDefinition.fields = siteDefinition.fields.filter((e)=>{
-          return e.name !== val; 
+          return e.name !== val;
         });
         return val;
       },
       when:(answers)=>{
-        return answers.action === 'remove a field'; 
+        return answers.action === 'remove a field';
       }
     },{
       type:'list',
-      name:'removeContentType', 
-      message:'Which content type do you want to remove?', 
+      name:'removeContentType',
+      message:'Which content type do you want to remove?',
       choices:()=>{
-        return siteDefinition.contentTypes.map(e=>e.name); 
+        return siteDefinition.contentTypes.map(e=>e.name);
       },
       filter:(val)=>{
         siteDefinition.contentTypes = siteDefinition.contentTypes.filter((e)=>{
-          return e.name === val; 
+          return e.name === val;
         });
       },
       when:(answers)=>{
-        return answers.action === 'remove a content type'; 
+        return answers.action === 'remove a content type';
       }
     },{
       type:'list',
-      name:'defaultPagesLibraryContentType', 
+      name:'defaultPagesLibraryContentType',
       message:'Which content type do you want to use as the default for the pages library?',
       choices:()=>{
         return getDocTypes(siteDefinition.contentTypes||[]).map((e)=>{
@@ -176,35 +176,35 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
         return answers.action === 'set default pages library content type';
       },
       filter:(val)=>{
-        siteDefinition.defaultPagesContentType = val; 
-        return val; 
+        siteDefinition.defaultPagesContentType = val;
+        return val;
       }
     },{
-      type:'input', 
-      name:'homePage', 
+      type:'input',
+      name:'homePage',
       message:'What is the URL for the homepage? i.e. Pages/Home.aspx',
       when:(answers)=>{
-        return answers.action === 'set home page'; 
+        return answers.action === 'set home page';
       },
       filter:(val)=>{
-        siteDefinition.homePage = val.trim(); 
-        return val; 
+        siteDefinition.homePage = val.trim();
+        return val;
       },
       validate:(val)=>{
         return val && val.trim();
       },
       default:()=>{
-        return siteDefinition.homePage; 
+        return siteDefinition.homePage;
       }
     },{
       type:'input',
-      name:'defaultPageLayout', 
+      name:'defaultPageLayout',
       message:'What is the name of the page layout to set as default? i.e. Test/DefaultLayout.aspx (this internally translates to _catalog/masterpage/Test/DefaultLayout.aspx',
       when:(answers)=>{
-        return answers.action === 'set default page layout'; 
+        return answers.action === 'set default page layout';
       },
       filter:(val)=>{
-        return siteDefinition.defaultPageLayout = val.trim(); 
+        return siteDefinition.defaultPageLayout = val.trim();
       },
       validate:(val)=>{
         return val && val.trim();
@@ -213,9 +213,9 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
         return siteDefinition.defaultPageLayout;
       }
     },{
-      type:'checkbox', 
-      name:'appList', 
-      message:'Here is a list of all the available apps', 
+      type:'checkbox',
+      name:'appList',
+      message:'Here is a list of all the available apps',
       filter:(val)=>{
         siteDefinition.apps = val.filter((e)=>e !== 'None').map((e)=>{
           return {
@@ -227,30 +227,30 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
         return val;
       },
       choices:(answers)=>{
-        var apps = []; 
+        var apps = [];
         try{
           apps = fs.readdirSync(generator.destinationPath('./apps'));
           apps = apps.filter((e)=>{
-            return e.endsWith('.app'); 
+            return e.endsWith('.app');
           })
           .map((e)=>{
             return {
-              name:e, 
+              name:e,
               value:e
             };
           });
         }catch(err){
-          apps = [{name:'None',value:'None'}]; 
+          apps = [{name:'None',value:'None'}];
         }
         return apps;
       },
       when:(answers)=>{
-        return answers.action === 'refresh sharepoint apps list'; 
+        return answers.action === 'refresh sharepoint apps list';
       }
     }];
-    var action = null; 
+    var action = null;
     return generator.prompt(prompts).then((answers)=>{
-      action = answers.action; 
+      action = answers.action;
       if (answers.action === 'validate') {
         return cleanSiteDefinition(generator,siteDefinition);
       } else if (answers.action === 'configure term store'){
@@ -274,27 +274,27 @@ module.exports = function configureSiteDefinition(generator,siteDefinition,confi
       } else if (answers.action === 'configure security'){
         return configureSecutiry(generator,siteDefinition);
       }else if (answers.action === 'configure features'){
-        return configureFeatures(generator,siteDefinition); 
+        return configureFeatures(generator,siteDefinition);
       }else if (answers.action === 'configure navigation'){
-        return configureNavigation(generator,siteDefinition); 
+        return configureNavigation(generator,siteDefinition);
       }else if (answers.action === 'enable using site collection term group'){
-        siteDefinition.setSiteCollectionTermGroupName = true; 
+        siteDefinition.setSiteCollectionTermGroupName = true;
       }else if (answers.action === 'disable using site collection term group'){
-        siteDefinition.setSiteCollectionTermGroupName = false; 
+        siteDefinition.setSiteCollectionTermGroupName = false;
       }else if (answers.action === 'configure commands'){
-        return configureCommands(generator,siteDefinition); 
+        return configureCommands(generator,siteDefinition);
       }else if (answers.action === 'configure apps'){
         return configureApps(generator,siteDefinition);
       }else if (answers.action === 'configure localizations'){
-        return configureLocalizations(generator,siteDefinition); 
+        return configureLocalizations(generator,siteDefinition);
       }else if (answers.action === 'configure composed look'){
         return configureComposedLook(generator,siteDefinition,config);
       }else if (answers.action === 'configure color palette'){
-        return configureColorPalette(generator,config,siteDefinition); 
+        return configureColorPalette(generator,config,siteDefinition);
       }else if (answers.action === 'configure font palette') {
         return configureFontPalette(generator,config,siteDefinition);
       } else if (answers.action === 'configure page layouts and master pages'){
-        return configureFiles(generator,config,siteDefinition); 
+        return configureFiles(generator,config,siteDefinition);
       }
     })
     .then(()=>{
