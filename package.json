@@ -10,7 +10,7 @@
   },
   "files": ["generators"],
   "main": "generators/index.js",
-  "keywords": ["Generator", "yeoman-generator"],
+  "keywords": ["SharePoint", "Generator", "yeoman-generator"],
   "devDependencies": {
     "eslint": "^4.1.0",
     "eslint-config-prettier": "^2.8.0",
@@ -42,6 +42,7 @@
     "testEnvironment": "node"
   },
   "scripts": {
+    "prepublish": "nsp check",
     "pretest": "eslint .",
     "precommit": "lint-staged",
     "test": "jest"
